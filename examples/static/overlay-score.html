@@ -1,0 +1,183 @@
+<html>
+  <head>
+    <style>
+      @font-face {
+	font-family: "Short Stack";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(ShortStack.woff2) format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+	  U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193,
+	  U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      #scoreboard-wrapper {
+	display: grid;
+	justify-content: center;
+	max-height: 200px;
+	grid-template-rows: 1fr 1fr;
+      }
+      #scoreboard {
+	display: grid;
+	grid-template-columns: 1fr 100px 1fr;
+	grid-gap: 10px;
+	grid-auto-flow: column;
+	height: 80px;
+	background: darkgray;
+	padding: 5px;
+	min-width: 300px;
+      }
+      body {
+	color: white;
+	font-family: "Short Stack", cursive;
+	font-size: 26px;
+      }
+      #scoreboard img {
+	height: 70px;
+	border-radius: 50%;
+	border-style: solid;
+      }
+      #team1 {
+	display: flex;
+	position: relative;
+	justify-content: end;
+	align-items: center;
+      }
+      #team1 img {
+	position: absolute;
+	left: -30px;
+      }
+      #team2 {
+	display: flex;
+	position: relative;
+	justify-content: start;
+	align-items: center;
+      }
+      #team2 img {
+	position: absolute;
+	right: -30px;
+      }
+      #score {
+	position: relative;
+      }
+      #team1-score {
+	position: absolute;
+	left: 10%;
+	top: 30%;
+      }
+      #team2-score {
+	position: absolute;
+	right: 10%;
+	top: 30%;
+      }
+      #score-hyphen {
+	position: absolute;
+	left: 45%;
+	top: 30%;
+      }
+      #team1-name {
+	margin-left: 50px
+      }
+      #team2-name {
+	margin-right: 50px
+      }
+      .team-score {
+	font-size: 26px;
+	transition-property: font-size;
+	transition-duration: 2s;
+	transition-delay: 0s;
+      }
+      .score-update {
+	font-size: 40px;
+	color: #ffcccc;
+      }
+      #norsk-logo {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+	width: 150px;
+	background: #1d2a3a;
+	padding: 10px;
+      }
+      #scroll-wrapper {
+	background: #1d2a3a;
+	font-size: 1em;
+	height: 1.5em;
+	overflow: hidden;
+      }
+      .scroll {
+	transform: translateX(100%);
+	animation: score-scroll 10s linear 1;
+      }
+      @keyframes score-scroll {
+	from {
+	  transform: translateX(100%);
+	}
+	to {
+	  transform: translateX(-100%);
+	}
+      }
+      .remove-animation {
+	animation: none !important;
+      }
+    </style>
+    <script>
+      function updateScore(newScores) {
+	const update = (teamId, team) => {
+	  const teamScoreElem = document.getElementById(teamId);
+	  if (teamScoreElem.innerHTML != team.score) {
+	    teamScoreElem.innerHTML = team.score;
+	    renderScoreAnimation(teamScoreElem);
+	    renderScrollingText(team);
+	  }
+	};
+	update("team1-score", newScores.team1);
+	update("team2-score", newScores.team2);
+
+	document.getElementById("team1-name").innerHTML = newScores.team1.name || "Team1";
+	document.getElementById("team2-name").innerHTML = newScores.team2.name || "Team2";
+      }
+      function renderScoreAnimation(teamElem) {
+	const oldClass = teamElem.className;
+	teamElem.className += " score-update";
+	setTimeout(() => {
+	  teamElem.className = oldClass;
+	}, 2000);
+      }
+      function renderScrollingText(team) {
+	  const scrollingElem = document.getElementById("scroll-text");
+	  scrollingElem.remove();
+	  scrollingElem.innerHTML = team.name + " scores!!";
+	  const scrollWrapper = document.getElementById("scroll-wrapper");
+	  scrollWrapper.appendChild(scrollingElem);
+      }
+      function fetchScore() {
+	fetch("/score")
+	  .then((response) => response.json())
+	  .then(updateScore);
+      }
+      setInterval(fetchScore, 1000);
+    </script>
+  </head>
+  <body>
+    <img id="norsk-logo" src="Norsk-Logo-Dark-Background.png" />
+    <div id="scoreboard-wrapper" class="doodle">
+      <div id="scoreboard">
+	<div id="team1">
+	  <img src="team1.png" />
+	  <div id="team1-name">Team1</div>
+	</div>
+	<div id="score">
+	  <div id="team1-score" class="team-score">0</div>
+	  <div id="score-hyphen">-</div>
+	  <div id="team2-score" class="team-score">0</div>
+	</div>
+	<div id="team2">
+	  <div id="team2-name">Team2</div>
+	  <img src="team2.png" />
+	</div>
+      </div>
+      <div id="scroll-wrapper"><div id="scroll-text" class="scroll"></div></div>
+    </div>
+  </body>
+</html>

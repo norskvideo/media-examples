@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <style>
+      @font-face {
+        font-family: "Short Stack";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(ShortStack.woff2) format("woff2");
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+          U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193,
+          U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      body {
+        font-family: "Short Stack", cursive;
+      }
+    </style>
+    <link rel="stylesheet" href="doodle.css" />
+    <script>
+      function submitScore() {
+        fetch("/score", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            "team1-score": document.getElementById("score1").value,
+            "team2-score": document.getElementById("score2").value,
+            "team1-name": document.getElementById("name1").value,
+            "team2-name": document.getElementById("name2").value,
+          }),
+        });
+      }
+      fetch("/score")
+        .then((response) => response.json())
+        .then((scores) => {
+          document.getElementById("score1").value = scores.team1.score;
+          document.getElementById("score2").value = scores.team2.score;
+          document.getElementById("name1").value = scores.team1.name;
+          document.getElementById("name2").value = scores.team2.name;
+        });
+    </script>
+  </head>
+  <body class="doodle">
+    <form
+      method="post"
+      id="update-score-form"
+      onsubmit="submitScore(); return false"
+    >
+      <div class="team-score">
+        <label for="team1-score">Team 1 score: </label>
+        <input
+          type="number"
+          name="team1-score"
+          id="score1"
+          value="0"
+          required
+        />
+        <label for="team1-name">Team 1 name: </label>
+        <input type="text" name="team1-name" id="name1" value="" required />
+      </div>
+      <div class="team-score">
+        <label for="team2-score">Team 2 score: </label>
+        <input
+          type="number"
+          name="team2-score"
+          id="score2"
+          value="0"
+          required
+        />
+        <label for="team2-name">Team 2 name: </label>
+        <input type="text" name="team2-name" id="name2" value="" required />
+      </div>
+      <div class="form-example">
+        <input type="submit" value="Submit" />
+      </div>
+    </form>
+  </body>
+</html>
