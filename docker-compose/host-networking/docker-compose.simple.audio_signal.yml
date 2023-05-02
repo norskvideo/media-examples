@@ -1,0 +1,34 @@
+version: "3"
+
+services:
+  norsk:
+    image: id3asnorsk/norsk:v0.0.321-main
+    network_mode: host
+    volumes:
+      - ${LICENSE_FILE}:/mnt/license.json:ro
+      - ${LOG_ROOT}:/var/log/norsk
+    command: --license-file /mnt/license.json
+    shm_size: '2gb'
+    # cpuset: "0-15"
+  example:
+    container_name: norsk-example-app
+    build:
+      context: examples
+      dockerfile: Dockerfile
+      network: host # note this is for build only, not at runtime. Without it npm install can fail on some systems
+    network_mode: host
+    depends_on:
+      norsk:
+        condition: service_healthy
+    command: node -e 'require("./lib/src/simple/audio_signal").main()'
+  source:
+    container_name: norsk-source
+    image: datarhei/ffmpeg
+    network_mode: host
+    entrypoint: ["/bin/sh","-c"]
+    command:
+    - |
+        sleep 1
+        
+    depends_on:
+      - example
