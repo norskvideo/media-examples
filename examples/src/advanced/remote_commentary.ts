@@ -21,12 +21,7 @@ import {
 } from "@id3asnorsk/norsk-sdk";
 
 export async function main() {
-  const norsk = await Norsk.connect({
-    onShutdown: () => {
-      console.log("Norsk has shutdown");
-      process.exit(1)
-    }
-  });
+  const norsk = await Norsk.connect({});
 
   let connected = false;
   let srtInputSettings: SrtInputSettings = {

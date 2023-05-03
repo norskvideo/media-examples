@@ -107,12 +107,7 @@ let partDurationSeconds = 1.0;
 let segmentDurationSeconds = 4.0;
 
 export async function main() {
-  const norsk = await Norsk.connect({
-    onShutdown: () => {
-      console.log("Norsk has shutdown");
-      process.exit(1)
-    }
-  });
+  const norsk = await Norsk.connect({});
 
   let input = await norsk.input.rtmpServer({
     id: "rtmp",

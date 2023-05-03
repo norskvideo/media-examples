@@ -1,15 +1,13 @@
 import {
   Norsk,
-  videoStreamKeys,
   ComposePart,
   ComposeVideoSettings,
   BrowserInputSettings,
-  PinToKey,
   selectVideo,
   selectAudio,
-  StreamMetadata,
+  videoToPin,
 } from "@id3asnorsk/norsk-sdk";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 
 const express = require("express");
 const app = express();
@@ -83,18 +81,6 @@ export async function main() {
 
   console.log(`Local player: ${output.playerUrl}`);
 }
-
-const videoToPin = <Pins extends string>(pin: Pins) => {
-  return (streams: StreamMetadata[]): PinToKey<Pins> => {
-    const video = videoStreamKeys(streams);
-    if (video.length == 1) {
-      let o: PinToKey<Pins> = {};
-      o[pin] = video;
-      return o;
-    }
-    return undefined;
-  };
-};
 
 function runWebServer() {
   let scoreboard = {
