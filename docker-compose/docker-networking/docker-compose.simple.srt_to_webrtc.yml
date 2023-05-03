@@ -15,8 +15,8 @@ services:
       - 6791:6791/tcp # Debugging endpoints, including the Media visualizer, logs, and docs
       - 8080:8080/tcp # Public endpoints for HLS/DASH and WebRTC players
     volumes:
-      - ./licensing/norsk_license.json:/mnt/license.json:ro
-      - ./norskLogs:/var/log/norsk
+      - ${LICENSE_FILE}:/mnt/license.json:ro
+      - ${LOG_ROOT}:/var/log/norsk
     command: --license-file /mnt/license.json
     shm_size: '2gb'
     # cpuset: "0-15"
@@ -25,7 +25,7 @@ services:
   example:
     container_name: norsk-example-app
     build:
-      context: ../../../examples
+      context: examples
       dockerfile: Dockerfile
       network: host # note this is for build only, not at runtime. Without it npm install can fail on some systems
     environment:

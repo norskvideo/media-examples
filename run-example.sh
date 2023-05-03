@@ -28,7 +28,7 @@ function runExample() {
     local -r dockerComposeCmd=${2}
     local -r ymlPath=${3}
     mkdir -p "$LOG_ROOT/$exampleName"
-    chmod 777 "$LOG_ROOT/$exampleName"
+    chmod -R 777 "$LOG_ROOT"
 
     LICENSE_FILE="$(realpath "$LICENSE_FILE")" \
     LOG_ROOT=$(realpath "$LOG_ROOT/$exampleName") \
@@ -38,12 +38,12 @@ function runExample() {
 }
 
 function stopExample() {
-    docker ps --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server" -q | xargs --no-run-if-empty docker rm -f
+    docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server" -q | xargs --no-run-if-empty docker rm -f
     docker network ls --filter name="^norsk-nw" -q | xargs --no-run-if-empty docker network rm
 }
 
 function main() {
-    local -r opts=$(getopt -o h: --longoptions help,license-file:,log-root: -n "$0" -- "$@")
+    local -r opts=$(getopt -o h: --longoptions help,license-file:,log-root:,network-mode: -n "$0" -- "$@")
     local ymlPath
     local dockerComposeCmd
 
@@ -138,7 +138,6 @@ function main() {
             ;;
         esac
     fi
-
 }
 
 main "$@"
