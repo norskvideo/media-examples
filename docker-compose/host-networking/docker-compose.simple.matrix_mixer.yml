@@ -3,7 +3,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: id3asnorsk/norsk:v0.0.321-main
+    image: id3asnorsk/norsk:v0.0.322-main
     network_mode: host
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro

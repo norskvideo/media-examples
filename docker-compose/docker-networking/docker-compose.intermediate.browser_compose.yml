@@ -7,7 +7,7 @@ networks:
 services:
   norsk:
     container_name: norsk-server
-    image: id3asnorsk/norsk:v0.0.321-main
+    image: id3asnorsk/norsk:v0.0.322-main
     ports:
       - 5001:5001/tcp # For RTMP sources
       - 5001:5001/udp # For SRT sources
