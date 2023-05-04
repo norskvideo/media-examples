@@ -89,8 +89,17 @@ function stopExample() {
 }
 
 function stopAll() {
-    docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server" -q | xargs --no-run-if-empty docker rm -f
-    docker network ls --filter name="^norsk-nw" -q | xargs --no-run-if-empty docker network rm
+    local -ar matchingContainers=$(docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server")
+    echo $matchingContainers[@]
+    local -r matchingContainersCmd='docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server"'
+    local -r matchingNetworksCmd='docker network ls --filter name="^norsk-nw"'
+    echo "Stopping the following containers"
+    $matchingContainersCmd
+    $matchingContainersCmd -q | xargs --no-run-if-empty docker rm -f
+    echo
+    echo "Deleting the following networks"
+    $matchingNetworksCmd
+    $matchingNetworksCmd -q | xargs --no-run-if-empty docker network rm
     exit 0
 }
 
@@ -152,7 +161,7 @@ function main() {
             stopExample
             exit 0
             ;;
-        stopAll)
+        stop-all)
             stopAll
             exit 0
             ;;
