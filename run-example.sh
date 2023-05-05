@@ -56,10 +56,13 @@ function startExample() {
     # As a result we soft link the selected yml file to the current directory to the
     # behaviour is the same in both cases.
     # It's also convient for `docker compose down`
-    local -r dcFile="$ymlPath/docker-compose.${exampleName}.yml"
+    local -r dcFile="$ymlPath/${exampleName}.yml"
     if [ -f "$dcFile" ]; then
         rm -f docker-compose.yml
-        ln -s "$dcFile" docker-compose.yml
+        cat "$dcFile" |
+            sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
+                -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
+                >docker-compose.yml
     else
         echo "Error: example not found $exampleName"
         exit 1
@@ -80,8 +83,7 @@ function stopExample() {
     local -r dockerComposeCmd=$(dockerComposeCmd || exit 1)
 
     if [ -f docker-compose.yml ]; then
-        # We don't need a license or log dir to stop - they just need to be set to something!
-        LICENSE_FILE="." LOG_ROOT="." $dockerComposeCmd down -t 1
+        $dockerComposeCmd down -t 1
         exit 0
     else
         stopAll
@@ -90,7 +92,7 @@ function stopExample() {
 
 function stopAll() {
     local -ar matchingContainers=$(docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server")
-    echo $matchingContainers[@]
+    echo $matchingContainers
     local -r matchingContainersCmd='docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server"'
     local -r matchingNetworksCmd='docker network ls --filter name="^norsk-nw"'
     echo "Stopping the following containers"
