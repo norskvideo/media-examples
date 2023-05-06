@@ -36,20 +36,8 @@ services:
     command: node -e 'require("./lib/src/15_rtmp_server").main()'
     networks:
       - norskNetwork
-  source_0:
-    container_name: norsk-source_0
-    image: datarhei/ffmpeg
-    entrypoint: ["/bin/sh","-c"]
-    command:
-    - |
-        sleep 1
-        Running example 15_rtmp_server
-    depends_on:
-      - example
-    networks:
-      - norskNetwork
-  source_1:
-    container_name: norsk-source_1
+  source:
+    container_name: norsk-source
     image: datarhei/ffmpeg
     entrypoint: ["/bin/sh","-c"]
     command:

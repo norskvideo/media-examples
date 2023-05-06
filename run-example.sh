@@ -14,7 +14,9 @@ function usage() {
     echo "    --network-mode [docker|host] : whether the example should run in host or docker network mode.  Defaults to host"
     echo "  Commands:"
     echo "    list : List the example names along with a short description of each"
-    echo "    start <example-name> : start the named example"
+    echo "    start <example-name> : start the named example."
+    echo "        The example-name can be full (e.g. 00_hello_norsk), just the number (e.g. 00)"
+    echo "        or just the name (e.g. hello_norsk)"
     echo "    stop : Stops the last launched example with \`docker compose down\`"
     echo "    stop-all : Stops all example containers and deletes the associated docker network (if any)"
     echo "  Environment variables:"
@@ -28,7 +30,7 @@ function dockerComposeCmd() {
     # Earlier version of docker-compose are called differently
     if ! docker compose >/dev/null 2>&1; then
         if ! docker-compose >/dev/null 2>&1; then
-            echo "Unable to find docker-compose - exiting"
+            echo >&2 "Error: Unable to find docker-compose - exiting"
             exit 1
         else
             echo "docker-compose"
@@ -48,29 +50,46 @@ function startExample() {
     local -r ymlPath=${2}
     local -r dockerComposeCmd=$(dockerComposeCmd || exit 1)
 
+    pushd "$ymlPath" >/dev/null
+    case "$exampleName" in
+    [0-9][0-9]) # User gave just the example number
+        candidate=$(ls -1 "$1_"*".yml" 2>/dev/null || true | head -1)
+        ;;
+    [0-9][0-9]_*.yml) # Full match
+        candidate=$(ls -1 "$1" 2>/dev/null | head -1)
+        ;;
+    [0-9][0-9]_*) # Full name of example (no extension)
+        candidate=$(ls -1 "$1.yml" 2>/dev/null || true | head -1)
+        ;;
+    *)
+        echo just name
+        candidate=$(ls -1 [0-9][0-9]"_$1.yml" 2>/dev/null || true | head -1)
+        ;;
+    esac
+    popd >/dev/null
+
+    local -r dcFile="$ymlPath/$candidate"
+    if [ ! -f "$dcFile" ]; then
+        echo "Error: example not found $exampleName"
+        exit 1
+    fi
+
     local HOST_URL_PREFIX=${HOST_URL_PREFIX:-$HOST_URL_PREFIX_DEFAULT}
     mkdir -p "$LOG_ROOT/$exampleName"
 
     # Different versions of docker-compose treat paths inside yml files differently
     # (some consider paths relative to the yml file - other relative to where you run from)
-    # As a result we soft link the selected yml file to the current directory to the
-    # behaviour is the same in both cases.
-    # It's also convient for `docker compose down`
-    local -r dcFile="$ymlPath/${exampleName}.yml"
-    if [ -f "$dcFile" ]; then
-        rm -f docker-compose.yml
-        cat "$dcFile" |
-            sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
-                -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
-                >docker-compose.yml
-    else
-        echo "Error: example not found $exampleName"
-        exit 1
-    fi
+    # As a result we copy the selected yml file to the current directory with the default
+    # docker compose name (docerk-compose.yml) so that the behaviour is the same for all
+    # all versions. It's also convient for `docker compose down`
+    rm -f docker-compose.yml
+    cat "$dcFile" |
+        sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
+            -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
+            >docker-compose.yml
 
+    echo "Starting example ${candidate:0:-4}"
     HOST_URL_PREFIX=$HOST_URL_PREFIX \
-        LICENSE_FILE="$(realpath "$LICENSE_FILE")" \
-        LOG_ROOT=$(realpath "$LOG_ROOT/$exampleName") \
         $dockerComposeCmd up --build --detach
     echo "Workflow visualiser URL $HOST_URL_PREFIX:6791/visualiser"
     sleep 1

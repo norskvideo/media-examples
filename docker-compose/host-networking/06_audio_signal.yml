@@ -22,19 +22,8 @@ services:
       norsk:
         condition: service_healthy
     command: node -e 'require("./lib/src/06_audio_signal").main()'
-  source_0:
-    container_name: norsk-source_0
-    image: datarhei/ffmpeg
-    network_mode: host
-    entrypoint: ["/bin/sh","-c"]
-    command:
-    - |
-        sleep 1
-        Running example 06_audio_signal
-    depends_on:
-      - example
-  source_1:
-    container_name: norsk-source_1
+  source:
+    container_name: norsk-source
     image: datarhei/ffmpeg
     network_mode: host
     entrypoint: ["/bin/sh","-c"]
