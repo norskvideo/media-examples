@@ -4,7 +4,13 @@ cd "${0%/*}"
 
 declare LOG_ROOT
 declare LICENSE_FILE
-declare -r HOST_URL_PREFIX_DEFAULT="http://127.0.0.1"
+
+declare -r PUBLIC_URL_PREFIX_DEFAULT="http://127.0.0.1:8080"
+declare -r PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-$PUBLIC_URL_PREFIX_DEFAULT}
+
+declare -r DEBUG_URL_PREFIX_DEFAULT="http://127.0.0.1:6791"
+declare -r DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX:-$DEBUG_URL_PREFIX_DEFAULT}
+
 
 function usage() {
     # TODO :)
@@ -22,7 +28,8 @@ function usage() {
     echo "  Environment variables:"
     echo "    The run script allows the displayed URLs to have a custome URL root to"
     echo "    facilitate ease of viewing outputs / visualiser / documentation etc."
-    echo "    HOST_URL_PREFIX - default: $HOST_URL_PREFIX_DEFAULT"
+    echo "    PUBLIC_URL_PREFIX - default: $PUBLIC_URL_PREFIX_DEFAULT"
+    echo "    DEBUG_URL_PREFIX - default: $DEBUG_URL_PREFIX_DEFAULT"
     exit 1
 }
 
@@ -41,6 +48,7 @@ function dockerComposeCmd() {
 }
 
 function listExamples() {
+    
     echo "here is the list of examples"
     exit 0
 }
@@ -74,7 +82,6 @@ function startExample() {
         exit 1
     fi
 
-    local HOST_URL_PREFIX=${HOST_URL_PREFIX:-$HOST_URL_PREFIX_DEFAULT}
     mkdir -p "$LOG_ROOT/$exampleName"
 
     # Different versions of docker-compose treat paths inside yml files differently
@@ -89,9 +96,9 @@ function startExample() {
             >docker-compose.yml
 
     echo "Starting example ${candidate:0:-4}"
-    HOST_URL_PREFIX=$HOST_URL_PREFIX \
+    PUBLIC_URL_PREFIX=$PUBLIC_URL_PREFIX \
         $dockerComposeCmd up --build --detach
-    echo "Workflow visualiser URL $HOST_URL_PREFIX:6791/visualiser"
+    echo "Workflow visualiser URL $DEBUG_URL_PREFIX/visualiser"
     sleep 1
     echo "Example app logs"
     docker logs norsk-example-app
