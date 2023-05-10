@@ -1,9 +1,14 @@
+# Norsk Media example: 07_pid_normalization
+#
+# Receive an RTMP stream and package it in a transport stream with explicit PID mappings
+#
+
 version: "3"
 
 services:
   norsk:
     container_name: norsk-server
-    image: id3asnorsk/norsk:v0.0.322-main
+    image: norskvideo/norsk:v0.0.327-main
     network_mode: host
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro

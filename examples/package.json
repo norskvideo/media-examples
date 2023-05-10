@@ -1,9 +1,9 @@
 {
   "license": "MIT",
-  "name": "@id3asnorsk/media-examples",
+  "name": "@norskvideo/media-examples",
   "dependencies": {
-    "@id3asnorsk/norsk-api": "0.0.322",
-    "@id3asnorsk/norsk-sdk": "0.0.322",
+    "@norskvideo/norsk-api": "0.0.327",
+    "@norskvideo/norsk-sdk": "0.0.327",
     "express": "^4.18.2",
     "yargs": "16.2.0"
   },
@@ -20,5 +20,5 @@
     "@types/yargs": "17.0.13",
     "typescript": "^4.9.5"
   },
-  "version": "0.0.322"
+  "version": "0.0.327"
 }

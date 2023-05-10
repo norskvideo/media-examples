@@ -1,10 +1,10 @@
-import { Norsk, SrtInputSettings, StreamMetadata, selectAV } from "@id3asnorsk/norsk-sdk"
+import { Norsk, SrtInputSettings, StreamMetadata, selectAV } from "@norskvideo/norsk-sdk"
 
 export async function main() {
-  const norsk = await Norsk.connect({});
+  const norsk = await Norsk.connect();
 
   let input = await norsk.input.srt(srtInputSettings);
-  let output = await norsk.duplex.localWebRTC({ id: "localRtcOutput" })
+  let output = await norsk.duplex.localWebRTC({ id: "webrtc" })
 
   output.subscribe([{ source: input, sourceSelector: selectAV }]);
   console.log(`Local player: ${output.playerUrl}`);

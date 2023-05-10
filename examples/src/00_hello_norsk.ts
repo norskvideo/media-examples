@@ -1,7 +1,7 @@
-import { Norsk, selectAV } from "@id3asnorsk/norsk-sdk"
+import { Norsk, selectAV } from "@norskvideo/norsk-sdk"
 
 export async function main() {
-  const norsk = await Norsk.connect({});  
+  const norsk = await Norsk.connect();  
   console.log(`Hello from norsk version: ${norsk.version.label}`); 
   norsk.close(); 
 }

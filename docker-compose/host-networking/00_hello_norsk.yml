@@ -1,9 +1,14 @@
+# Norsk Media example: 00_hello_norsk
+#
+# Start Norsk and print its version number
+#
+
 version: "3"
 
 services:
   norsk:
     container_name: norsk-server
-    image: id3asnorsk/norsk:v0.0.322-main
+    image: norskvideo/norsk:v0.0.327-main
     network_mode: host
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro

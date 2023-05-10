@@ -1,13 +1,20 @@
-import { HlsAudioOutputSettings, HlsMasterOutputSettings, HlsVideoOutputSettings, Norsk, RtmpServerInputSettings, selectAudio, selectAV, selectVideo } from "@id3asnorsk/norsk-sdk";
+import {
+  CMAFDestinationSettings,
+  Norsk,
+  selectAudio,
+  selectAV,
+  selectVideo,
+} from "@norskvideo/norsk-sdk";
 
 export async function main() {
-  const norsk = await Norsk.connect({});
+  const norsk = await Norsk.connect();
 
   let input = await norsk.input.rtmpServer({ id: "rtmpInput", port: 5001 });
+  let destinations: CMAFDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
 
-  let audioOutput = await norsk.output.hlsAudio(segmentSettings("audio"));
-  let videoOutput = await norsk.output.hlsVideo(segmentSettings("video"));
-  let masterOutput = await norsk.output.hlsMaster({ id: "master", playlistName: "master" });
+  let audioOutput = await norsk.output.hlsAudio({ id: "audio", destinations, ...segmentSettings });
+  let videoOutput = await norsk.output.hlsVideo({ id: "video", destinations, ...segmentSettings });
+  let masterOutput = await norsk.output.hlsMaster({ id: "master", playlistName: "master", destinations });
 
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
   videoOutput.subscribe([{ source: input, sourceSelector: selectVideo }]);
@@ -18,15 +25,12 @@ export async function main() {
   videoOutput.url().then(logMediaPlaylist("video"));
 }
 
-function segmentSettings(id: string) {
-  return {
-    id: id,
-    partDurationSeconds: 1.0,
-    segmentDurationSeconds: 4.0,
-  };
-}
+const segmentSettings = {
+  partDurationSeconds: 1.0,
+  segmentDurationSeconds: 4.0,
+};
 
-function logMediaPlaylist(name: string) : (url: string) => void {
+function logMediaPlaylist(name: string): (url: string) => void {
   return (
     url => { console.log(`${name} playlistUrl: ${url}`); }
   );

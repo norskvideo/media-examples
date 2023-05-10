@@ -1,9 +1,19 @@
+# Norsk Media example: 08_rtmp_stream_stats
+#
+# 
+# Print out audio and video bitrate every 5 seconds.
+# 
+# This demo uses the dedicated StreamStatsNode, but other nodes also expose
+# stream stats through the same interface (e.g. NorskInput.rtmpServer)
+#   
+#
+
 version: "3"
 
 services:
   norsk:
     container_name: norsk-server
-    image: id3asnorsk/norsk:v0.0.322-main
+    image: norskvideo/norsk:v0.0.327-main
     network_mode: host
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro

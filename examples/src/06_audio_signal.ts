@@ -1,7 +1,7 @@
-import { AudioSignalGeneratorSettings, HlsAudioOutputSettings, mkSine, Norsk, selectAudio } from "@id3asnorsk/norsk-sdk"
+import { AudioSignalGeneratorSettings, HlsAudioOutputSettings, mkSine, Norsk, selectAudio } from "@norskvideo/norsk-sdk"
 
 export async function main() {
-  const norsk = await Norsk.connect({});
+  const norsk = await Norsk.connect();
 
   let input = await norsk.input.audioSignal(audioSignalSettings);
   let audioOutput = await norsk.output.hlsAudio(hlsAudioSettings);
@@ -25,4 +25,5 @@ const hlsAudioSettings: HlsAudioOutputSettings = {
   id: "hls-audio",
   partDurationSeconds: 1.0,
   segmentDurationSeconds: 4.0,
+  destinations: [{ type: "local", retentionPeriodSeconds: 60 }],
 };
