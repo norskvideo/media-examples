@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 cd "${0%/*}"
 
 declare LOG_ROOT
 declare LICENSE_FILE
 
 declare -r PUBLIC_URL_PREFIX_DEFAULT="http://127.0.0.1:8080"
-declare -r PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-$PUBLIC_URL_PREFIX_DEFAULT}
+declare    PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-$PUBLIC_URL_PREFIX_DEFAULT}
 
 declare -r DEBUG_URL_PREFIX_DEFAULT="http://127.0.0.1:6791"
 declare -r DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX:-$DEBUG_URL_PREFIX_DEFAULT}
@@ -30,15 +30,13 @@ function usage() {
     echo "    facilitate ease of viewing outputs / visualiser / documentation etc."
     echo "    PUBLIC_URL_PREFIX - default: $PUBLIC_URL_PREFIX_DEFAULT"
     echo "    DEBUG_URL_PREFIX - default: $DEBUG_URL_PREFIX_DEFAULT"
-    exit 1
 }
 
 function dockerComposeCmd() {
     # Earlier version of docker-compose are called differently
     if ! docker compose >/dev/null 2>&1; then
         if ! docker-compose >/dev/null 2>&1; then
-            echo >&2 "Error: Unable to find docker-compose - exiting"
-            exit 1
+            echo ""
         else
             echo "docker-compose"
         fi
@@ -48,42 +46,48 @@ function dockerComposeCmd() {
 }
 
 function listExamples() {
-    
-    echo "here is the list of examples"
-    exit 0
+    cat docker-compose/host-networking/*yml \
+    | grep -e '^#' \
+    | sed -e 's/# Norsk Media example: //' \
+          -e 's/#/ /' \
+          -e '/^[[:space:]]*$/d'
 }
 
 function startExample() {
     local -r exampleName=${1}
     local -r ymlPath=${2}
-    local -r dockerComposeCmd=$(dockerComposeCmd || exit 1)
-
+    local -r dockerComposeCmd=$(dockerComposeCmd)
+    if [ -z "$dockerComposeCmd" ]; then
+        echo "Error: Unable to find docker-compose - exiting"
+        exit 1
+    fi
+    
     pushd "$ymlPath" >/dev/null
     case "$exampleName" in
-    [0-9][0-9]) # User gave just the example number
-        candidate=$(ls -1 "$1_"*".yml" 2>/dev/null || true | head -1)
+        [0-9][0-9]) # User gave just the example number
+            candidate=$(ls -1 "$1_"*".yml" 2>/dev/null || true | head -1)
         ;;
-    [0-9][0-9]_*.yml) # Full match
-        candidate=$(ls -1 "$1" 2>/dev/null | head -1)
+        [0-9][0-9]_*.yml) # Full match
+            candidate=$(ls -1 "$1" 2>/dev/null | head -1)
         ;;
-    [0-9][0-9]_*) # Full name of example (no extension)
-        candidate=$(ls -1 "$1.yml" 2>/dev/null || true | head -1)
+        [0-9][0-9]_*) # Full name of example (no extension)
+            candidate=$(ls -1 "$1.yml" 2>/dev/null || true | head -1)
         ;;
-    *)
-        echo just name
-        candidate=$(ls -1 [0-9][0-9]"_$1.yml" 2>/dev/null || true | head -1)
+        *)
+            echo just name
+            candidate=$(ls -1 [0-9][0-9]"_$1.yml" 2>/dev/null || true | head -1)
         ;;
     esac
     popd >/dev/null
-
+    
     local -r dcFile="$ymlPath/$candidate"
     if [ ! -f "$dcFile" ]; then
         echo "Error: example not found $exampleName"
         exit 1
     fi
-
+    
     mkdir -p "$LOG_ROOT/$exampleName"
-
+    
     # Different versions of docker-compose treat paths inside yml files differently
     # (some consider paths relative to the yml file - other relative to where you run from)
     # As a result we copy the selected yml file to the current directory with the default
@@ -91,13 +95,13 @@ function startExample() {
     # all versions. It's also convient for `docker compose down`
     rm -f docker-compose.yml
     cat "$dcFile" |
-        sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
-            -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
-            >docker-compose.yml
-
-    echo "Starting example ${candidate:0:-4}"
+    sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
+        -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
+    >docker-compose.yml
+    echo $candidate
+    echo "Starting example ${candidate%.*}"
     PUBLIC_URL_PREFIX=$PUBLIC_URL_PREFIX \
-        $dockerComposeCmd up --build --detach
+    $dockerComposeCmd up --build --detach
     echo "Workflow visualiser URL $DEBUG_URL_PREFIX/visualiser"
     sleep 1
     echo "Example app logs"
@@ -107,18 +111,14 @@ function startExample() {
 
 function stopExample() {
     local -r dockerComposeCmd=$(dockerComposeCmd || exit 1)
-
     if [ -f docker-compose.yml ]; then
         $dockerComposeCmd down -t 1
-        exit 0
     else
         stopAll
     fi
 }
 
 function stopAll() {
-    local -ar matchingContainers=$(docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server")
-    echo $matchingContainers
     local -r matchingContainersCmd='docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server"'
     local -r matchingNetworksCmd='docker network ls --filter name="^norsk-nw"'
     echo "Stopping the following containers"
@@ -128,94 +128,80 @@ function stopAll() {
     echo "Deleting the following networks"
     $matchingNetworksCmd
     $matchingNetworksCmd -q | xargs --no-run-if-empty docker network rm
-    exit 0
 }
 
 function main() {
-    local -r opts=$(getopt -o h: --longoptions help,license-file:,log-root:,network-mode: -n "$0" -- "$@")
     local ymlPath
     local dockerComposeCmd
-
+    
+    declare -a positionalArguments
+    positionalArguments=()
+    
     # Defaults
     ymlPath="docker-compose/host-networking"
     LOG_ROOT="norskLogs"
-
-    eval set -- "$opts"
-    while true; do
-        case "$1" in
-        -h | --help)
-            usage
+    
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h | --help) usage ; exit 0 ;;
+            --license-file) export LICENSE_FILE="$2" ; shift 2 ;;
+            --log-root) 
+                # Remove trailing slash if present
+                export LOG_ROOT=${2%/}
+                shift 2
             ;;
-        --license-file)
-            export LICENSE_FILE="$2"
-            shift 2
+            --network-mode)
+                case "$2" in
+                    docker | host) ymlPath="docker-compose/"$2"-networking" ; shift 2 ;;
+                    *) echo "Unknown network-mode $2"; usage ; exit 1 ;;
+                esac
             ;;
-        --log-root)
-            # Remove trailing slash if present
-            export LOG_ROOT=${2%/}
-            shift 2
-            ;;
-        --network-mode)
-            case "$2" in
-            docker)
-                ymlPath="docker-compose/docker-networking"
-                ;;
-            host)
-                ## Set in the default
-                ;;
-            *)
-                echo "Unknown network-mode $2"
-                exit 1
-                ;;
-            esac
-            shift 2
-            ;;
-        --)
-            shift
-            break
-            ;;
-        *)
-            break
-            ;;
+            --) shift ; positionalArguments+=("$@") ; break ;;
+            -*) echo "Error: Unknown option $1" ; usage ; exit 1 ;;
+            *) positionalArguments+=("$1") ; shift ;;
         esac
     done
+    set -- "${positionalArguments[@]}"
     if [[ $# -eq 1 ]]; then
         case "$1" in
-        list)
-            listExamples
-            exit 0
+            list)
+                listExamples
+                exit 0
             ;;
-        stop)
-            stopExample
-            exit 0
+            stop)
+                stopExample
+                exit 0
             ;;
-        stop-all)
-            stopAll
-            exit 0
+            stop-all)
+                stopAll
+                exit 0
             ;;
-        *)
-            echo "Error: Unknown command $1"
-            usage
+            *)
+                echo "Error: Unknown command $1"
+                usage
+                exit 1
             ;;
         esac
     fi
-
+    
     if [[ -z ${LICENSE_FILE+x} ]]; then
         usage
+        exit 1
     fi
     if [[ ! -f ${LICENSE_FILE} ]]; then
         echo "License file not found: ${LICENSE_FILE}"
         exit 1
     fi
-
+    
     if [[ $# -eq 2 ]]; then
         case "$1" in
-        start)
-            startExample "$2" "$ymlPath"
+            start)
+                startExample "$2" "$ymlPath"
             ;;
-        *)
-            echo "Error: Unknown command $1"
-            usage
+            *)
+                echo "Error: Unknown command $1"
+                usage
             ;;
         esac
     fi
