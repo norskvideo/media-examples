@@ -13,7 +13,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v0.0.327-main
+    image: norskvideo/norsk:v0.0.328-main
     network_mode: host
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro
