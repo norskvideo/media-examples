@@ -1,6 +1,6 @@
-# Norsk Media example: 02_srt_to_webrtc
+# Norsk Media example: 04_srt_to_hls
 #
-# Subscribe to an SRT source and generate local WebRTC output from it
+# Package an inbound RTMP stream into LL-HLS
 #
 
 version: "3.5"
@@ -39,7 +39,7 @@ services:
     depends_on:
       norsk:
         condition: service_healthy
-    command: node -e 'require("./lib/src/02_srt_to_webrtc").main()'
+    command: node -e 'require("./lib/src/04_srt_to_hls").main()'
     networks:
       - norskNetwork
   source:

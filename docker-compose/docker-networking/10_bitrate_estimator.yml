@@ -1,6 +1,6 @@
-# Norsk Media example: 02_srt_to_webrtc
+# Norsk Media example: 10_bitrate_estimator
 #
-# Subscribe to an SRT source and generate local WebRTC output from it
+# Measure bitrate and set this estimate in the stream metadata
 #
 
 version: "3.5"
@@ -39,7 +39,7 @@ services:
     depends_on:
       norsk:
         condition: service_healthy
-    command: node -e 'require("./lib/src/02_srt_to_webrtc").main()'
+    command: node -e 'require("./lib/src/10_bitrate_estimator").main()'
     networks:
       - norskNetwork
   source:

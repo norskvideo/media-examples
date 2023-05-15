@@ -1,6 +1,6 @@
-# Norsk Media example: 00_hello_norsk
+# Norsk Media example: 06_mp4file_to_webrtc
 #
-# Start Norsk and print its version number
+# Publish a local MP4 files as a WebRTC stream
 #
 
 version: "3"
@@ -26,7 +26,7 @@ services:
     depends_on:
       norsk:
         condition: service_healthy
-    command: node -e 'require("./lib/src/00_hello_norsk").main()'
+    command: node -e 'require("./lib/src/06_mp4file_to_webrtc").main()'
   source:
     container_name: norsk-source
     image: datarhei/ffmpeg

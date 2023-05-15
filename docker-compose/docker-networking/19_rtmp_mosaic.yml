@@ -1,6 +1,6 @@
-# Norsk Media example: 02_srt_to_webrtc
+# Norsk Media example: 19_rtmp_mosaic
 #
-# Subscribe to an SRT source and generate local WebRTC output from it
+# Create an RTMP server and dynamically mosaic any inbound streams into a tiled mosaic, publishing the result as Trasport Stream-based HLS
 #
 
 version: "3.5"
@@ -39,7 +39,7 @@ services:
     depends_on:
       norsk:
         condition: service_healthy
-    command: node -e 'require("./lib/src/02_srt_to_webrtc").main()'
+    command: node -e 'require("./lib/src/19_rtmp_mosaic").main()'
     networks:
       - norskNetwork
   source:
@@ -49,7 +49,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -f lavfi -i "testsrc[out0];sine=frequency=220:sample_rate=48000[out1]" -vcodec h264 -b:v 150000 -b:a 20000 -vf scale=1280:720 -aspect 1280:720 -x264opts "keyint=25:min-keyint=25:no-scenecut:bframes=0" -bluray-compat true -tune stillimage -pix_fmt yuv420p -acodec aac -metadata language=en -f mpegts -flush_packets 0 'srt://norsk:5001'
+        ffmpeg -v error -re -f lavfi -i "testsrc[out0];sine=frequency=220:sample_rate=48000[out1]" -vcodec h264 -b:v 150000 -b:a 20000 -vf scale=1280:720 -aspect 1280:720 -x264opts "keyint=25:min-keyint=25:no-scenecut:bframes=0" -bluray-compat true -tune stillimage -pix_fmt yuv420p -acodec aac -metadata language=en -f flv 'rtmp://norsk:1935/mosaic/high'
     depends_on:
       - example
     networks:

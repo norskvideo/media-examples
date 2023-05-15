@@ -1,6 +1,6 @@
-# Norsk Media example: 00_hello_norsk
+# Norsk Media example: 07_audio_signal
 #
-# Start Norsk and print its version number
+# Generate an audio tone and publish it in an audio-only HLS playlist
 #
 
 version: "3"
@@ -26,7 +26,7 @@ services:
     depends_on:
       norsk:
         condition: service_healthy
-    command: node -e 'require("./lib/src/00_hello_norsk").main()'
+    command: node -e 'require("./lib/src/07_audio_signal").main()'
   source:
     container_name: norsk-source
     image: datarhei/ffmpeg

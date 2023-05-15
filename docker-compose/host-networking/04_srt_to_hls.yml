@@ -1,6 +1,6 @@
-# Norsk Media example: 00_hello_norsk
+# Norsk Media example: 04_srt_to_hls
 #
-# Start Norsk and print its version number
+# Package an inbound RTMP stream into LL-HLS
 #
 
 version: "3"
@@ -26,7 +26,7 @@ services:
     depends_on:
       norsk:
         condition: service_healthy
-    command: node -e 'require("./lib/src/00_hello_norsk").main()'
+    command: node -e 'require("./lib/src/04_srt_to_hls").main()'
   source:
     container_name: norsk-source
     image: datarhei/ffmpeg
@@ -35,6 +35,6 @@ services:
     command:
     - |
         sleep 1
-        
+        ffmpeg -v error -re -f lavfi -i "testsrc[out0];sine=frequency=220:sample_rate=48000[out1]" -vcodec h264 -b:v 150000 -b:a 20000 -vf scale=1280:720 -aspect 1280:720 -x264opts "keyint=25:min-keyint=25:no-scenecut:bframes=0" -bluray-compat true -tune stillimage -pix_fmt yuv420p -acodec aac -metadata language=en -f mpegts -flush_packets 0 'srt://127.0.0.1:5001'
     depends_on:
       - example
