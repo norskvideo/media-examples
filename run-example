@@ -11,6 +11,9 @@ declare    PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-$PUBLIC_URL_PREFIX_DEFAULT}
 declare -r DEBUG_URL_PREFIX_DEFAULT="http://127.0.0.1:6791"
 declare -r DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX:-$DEBUG_URL_PREFIX_DEFAULT}
 
+declare -r GRAFANA_URL_DEFAULT="http://127.0.0.1:3100"
+declare -r GRAFANA_URL=${GRAFANA_URL:-$GRAFANA_URL_DEFAULT}
+
 function usage() {
     # TODO :)
     echo "Usage: run-example --license-file <license-file> [options] [cmd]"
@@ -80,7 +83,6 @@ function startExample() {
             candidate=$(ls -1 "$1.yml" 2>/dev/null || true | head -1)
         ;;
         *)
-            echo just name
             candidate=$(ls -1 [0-9][0-9]"_$1.yml" 2>/dev/null || true | head -1)
         ;;
     esac
@@ -109,8 +111,14 @@ function startExample() {
     PUBLIC_URL_PREFIX=$PUBLIC_URL_PREFIX \
     $dockerComposeCmd up --build --detach
     echo "Workflow visualiser URL $DEBUG_URL_PREFIX/visualiser"
-    echo "Grafana URL $DEBUG_URL_PREFIX:3100/" # TODO
-    echo
+    case "$ymlPath" in
+        *"metrics")
+            echo "Grafana URL $GRAFANA_URL/"
+            echo
+            ;;
+        *)
+            ;;
+    esac
     echo "Output from example-application (ctrl-c to return to shell - this will not kill the containers!)"
     echo
     docker logs -f norsk-example-app
@@ -226,6 +234,11 @@ function main() {
     if [[ $# -eq 2 ]]; then
         case "$1" in
             start)
+                echo "Stopping any current example"
+                echo
+                stopExample
+                echo "Starting $2"
+                echo
                 startExample "$2" "$ymlPath"
             ;;
             *)
