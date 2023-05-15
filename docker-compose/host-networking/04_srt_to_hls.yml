@@ -1,6 +1,6 @@
 # Norsk Media example: 04_srt_to_hls
 #
-# Package an inbound RTMP stream into LL-HLS
+# Package an SRT stream into LL-HLS
 #
 
 version: "3"

@@ -1,6 +1,6 @@
 # Norsk Media example: 20_audio_mixer
 #
-# Generate an audio tone and publish it in an audio-only HLS playlist
+# Mix a chord from audio generators and publish it in an audio-only HLS playlist
 #
 
 version: "3"
