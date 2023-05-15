@@ -11,13 +11,15 @@ declare    PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-$PUBLIC_URL_PREFIX_DEFAULT}
 declare -r DEBUG_URL_PREFIX_DEFAULT="http://127.0.0.1:6791"
 declare -r DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX:-$DEBUG_URL_PREFIX_DEFAULT}
 
-
 function usage() {
     # TODO :)
     echo "Usage: run-example --license-file <license-file> [options] [cmd]"
     echo "  Options:"
     echo "    --log-root <log-dir> : where on the host to mount Norsk's logs.  The actual logs will be in a subdirectory with the name of the example you are running.  Default ./norskLogs"
+if [[ "$OSTYPE" == "linux"* ]]; then
     echo "    --network-mode [docker|host] : whether the example should run in host or docker network mode.  Defaults to host"
+fi
+    echo "    --metrics [true|false] : whether metrics containers are included. Defaults to false"
     echo "  Commands:"
     echo "    list : List the example names along with a short description of each"
     echo "    start <example-name> : start the named example."
@@ -26,10 +28,14 @@ function usage() {
     echo "    stop : Stops the last launched example with \`docker compose down\`"
     echo "    stop-all : Stops all example containers and deletes the associated docker network (if any)"
     echo "  Environment variables:"
-    echo "    The run script allows the displayed URLs to have a custome URL root to"
+    echo "    The run script allows the displayed URLs to have a custom URL root to"
     echo "    facilitate ease of viewing outputs / visualiser / documentation etc."
     echo "    PUBLIC_URL_PREFIX - default: $PUBLIC_URL_PREFIX_DEFAULT"
     echo "    DEBUG_URL_PREFIX - default: $DEBUG_URL_PREFIX_DEFAULT"
+    echo
+    echo "For example:"
+    echo "./run-example --license-file licence.json start rtmp_to_hls"
+    echo
 }
 
 function dockerComposeCmd() {
@@ -91,21 +97,24 @@ function startExample() {
     # Different versions of docker-compose treat paths inside yml files differently
     # (some consider paths relative to the yml file - other relative to where you run from)
     # As a result we copy the selected yml file to the current directory with the default
-    # docker compose name (docerk-compose.yml) so that the behaviour is the same for all
+    # docker compose name (docker-compose.yml) so that the behaviour is the same for all
     # all versions. It's also convient for `docker compose down`
     rm -f docker-compose.yml
     cat "$dcFile" |
     sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
         -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
     >docker-compose.yml
-    echo $candidate
+    echo "$candidate"
     echo "Starting example ${candidate%.*}"
     PUBLIC_URL_PREFIX=$PUBLIC_URL_PREFIX \
     $dockerComposeCmd up --build --detach
     echo "Workflow visualiser URL $DEBUG_URL_PREFIX/visualiser"
-    sleep 1
-    echo "Example app logs"
-    docker logs norsk-example-app
+    echo "Grafana URL $DEBUG_URL_PREFIX:3100/" # TODO
+    echo
+    echo "Output from example-application (ctrl-c to return to shell - this will not kill the containers!)"
+    echo
+    docker logs -f norsk-example-app
+    echo
     exit 0
 }
 
@@ -133,12 +142,17 @@ function stopAll() {
 function main() {
     local ymlPath
     local dockerComposeCmd
+    local addMetrics=false
     
     declare -a positionalArguments
     positionalArguments=()
     
     # Defaults
-    ymlPath="docker-compose/host-networking"
+    if [[ "$OSTYPE" == "linux"* ]]; then
+        ymlPath="docker-compose/host-networking"
+    else
+        ymlPath="docker-compose/docker-networking"
+    fi
     LOG_ROOT="norskLogs"
     
     
@@ -152,9 +166,20 @@ function main() {
                 shift 2
             ;;
             --network-mode)
+                if [[ "$OSTYPE" == "linux"* ]]; then
+                  case "$2" in
+                      docker | host) ymlPath="docker-compose/$2-networking" ; shift 2 ;;
+                      *) echo "Unknown network-mode $2"; usage ; exit 1 ;;
+                  esac
+                else
+                    echo "network-mode is unsupported on $OSTYPE"; usage ; exit 1
+                fi
+            ;;
+            --metrics)
                 case "$2" in
-                    docker | host) ymlPath="docker-compose/"$2"-networking" ; shift 2 ;;
-                    *) echo "Unknown network-mode $2"; usage ; exit 1 ;;
+                    true) addMetrics=true ; shift 2 ;;
+                    false) addMetrics=false ; shift 2 ;;
+                    *) echo "Unknown metrics $2"; usage ; exit 1 ;;
                 esac
             ;;
             --) shift ; positionalArguments+=("$@") ; break ;;
@@ -193,7 +218,11 @@ function main() {
         echo "License file not found: ${LICENSE_FILE}"
         exit 1
     fi
-    
+
+    if [[ "$addMetrics" == "true" ]]; then
+        ymlPath="$ymlPath"-metrics
+    fi
+
     if [[ $# -eq 2 ]]; then
         case "$1" in
             start)
