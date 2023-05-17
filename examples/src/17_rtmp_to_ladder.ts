@@ -1,11 +1,11 @@
-import { CMAFDestinationSettings, Norsk, selectAllVideos, selectAudio, selectVideo, StreamMetadata, VideoEncodeLadderRung, videoStreamKeys } from "@norskvideo/norsk-sdk";
+import { CMAFDestinationSettings, Norsk, selectAllVideos, selectAudio, selectVideo, StreamMetadata, VideoEncodeRung, videoStreamKeys } from "@norskvideo/norsk-sdk";
 
 export async function main(): Promise<void> {
   const norsk = await Norsk.connect();
-  let rtmpInput = { id: "rtmp", port: 5001 };
+  let rtmpInput = { id: "rtmp" };
   let input = await norsk.input.rtmpServer(rtmpInput);
 
-  let abrLadder = await norsk.processor.transform.videoEncodeLadder({ id: "ladder", rungs: ladderRungs });
+  let abrLadder = await norsk.processor.transform.videoEncode({ id: "ladder", rungs: ladderRungs });
   let destinations: CMAFDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 60 }]
   let masterOutput = await norsk.output.cmafMaster({ id: "master", playlistName: "master", destinations });
   let audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings });
@@ -26,7 +26,7 @@ export async function main(): Promise<void> {
 
   console.log(`Local player: ${masterOutput.playlistUrl}`);
 
-  let localRtcOutput = await norsk.duplex.localWebRTC({ id: "webrtc" });
+  let localRtcOutput = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
   localRtcOutput.subscribe(allVideoAndAudio);
 
   console.log(`Local player: ${localRtcOutput.playerUrl}`);
@@ -38,7 +38,7 @@ const segmentSettings = {
   partDurationSeconds: 1.0,
   segmentDurationSeconds: 4.0,
 }
-const ladderRungs: VideoEncodeLadderRung[] = [
+const ladderRungs: VideoEncodeRung[] = [
   {
     name: "high",
     width: 1280,

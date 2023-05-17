@@ -8,8 +8,8 @@ export async function main() {
     }
   });
 
-  let input = await norsk.input.rtmpServer({ id: "rtmpInput", port: 5001 });
-  let output = await norsk.output.localMp4File({
+  let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
+  let output = await norsk.output.fileMp4({
     id: "localMp4Output",
     fragmentedFileName: "/tmp/norskOutput.fmp4",
     nonfragmentedFileName: "/tmp/norskOutput.mp4",

@@ -3,7 +3,7 @@ import {
   CMAFDestinationSettings,
   CmafMasterOutputNode,
   CmafMasterOutputSettings,
-  LocalWebRTCNode,
+  WebRTCBrowserNode,
   Norsk,
   RtmpServerInputNode,
   StreamMetadata,
@@ -99,7 +99,7 @@ let subscribeAudio = (
 
 type App = {
   master: CmafMasterOutputNode;
-  webrtc: LocalWebRTCNode[];
+  webrtc: WebRTCBrowserNode[];
   sources: string[];
 };
 let knownApps: { [x: string]: App } = {};
@@ -112,7 +112,6 @@ export async function main() {
 
   let input = await norsk.input.rtmpServer({
     id: "rtmp",
-    port: 5001,
 
     onConnection: (app: string, url: string) => {
       console.log("Got RTMP connection", app, url);
@@ -147,7 +146,7 @@ export async function main() {
           console.log(`Local player: ${masterPlaylist.playlistUrl}`);
         }
         // Create a single WebRTC output for this new stream
-        let webRtcOutput = await norsk.duplex.localWebRTC({
+        let webRtcOutput = await norsk.duplex.webRtcBrowser({
           id: "webrtc-" + app + "-" + publishingName,
         });
         webRtcOutput.subscribe([subscribeAV(input, app, publishingName)]);

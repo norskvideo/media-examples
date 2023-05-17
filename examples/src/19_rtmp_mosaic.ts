@@ -1,138 +1,191 @@
-import express from "express";
+import { X264Codec } from "@norskvideo/norsk-api/lib/media_pb";
+import { AudioSignalGeneratorNode } from "@norskvideo/norsk-sdk";
+import { VideoEncodeRung } from "@norskvideo/norsk-sdk";
+import { OnStreamResult } from "@norskvideo/norsk-sdk";
+import { RtmpServerInputNode } from "@norskvideo/norsk-sdk";
 import {
   Norsk,
   videoStreamKeys,
-  ComposeVideoNode,
+  VideoComposeNode,
   PinToKey,
   audioStreamKeys,
   mkSine,
-  MediaNodeId,
   StreamMetadata,
   AudioSignalGeneratorSettings,
+  RtmpServerStreamKeys,
 } from "@norskvideo/norsk-sdk";
 
 export async function main() {
   const norsk = await Norsk.connect();
 
-  // Should this be a class with state rather than the handleNewStream with closures over local variables?
-  let streams: string[] = [];
-  let handleNewStream = () => { };
-
   let audioSignalInput = await norsk.input.audioSignal(audioInputSettings());
 
-  let input = await norsk.input.rtmpServer(
-    {
+  let mosaic = new Mosaic(norsk, audioSignalInput);
+
+  await mosaic.run();
+}
+
+class Mosaic {
+  norsk: Norsk;
+  audioSignalInput: AudioSignalGeneratorNode;
+  rtmpInput: RtmpServerInputNode | undefined;
+  compose: VideoComposeNode<string> | undefined = undefined;
+  streams: string[] = [];
+
+  constructor(norsk: Norsk, audioSignalInput: AudioSignalGeneratorNode) {
+    this.norsk = norsk;
+    this.audioSignalInput = audioSignalInput;
+  }
+
+  async run() {
+    this.rtmpInput = await this.norsk.input.rtmpServer({
       id: "rtmp",
       port: 1935,
-      onConnection: (app, url) => {
-        if (app === "mosaic") {
-          return ({ accept: true });
-        } else {
-          return ({ accept: false, reason: "App name must be mosaic" })
-        }
-      },
-      onStream: (_app, _url, _streamId, publishingName) => {
-        streams.push(publishingName);
-        handleNewStream();
+      onConnection: this.onConnection.bind(this),
+      onStream: this.onStream.bind(this),
+      onConnectionStatusChange: this.onConnectionStatusChange.bind(this)
+    });
+  }
 
-        return { accept: true, videoStreamKey: { renditionName: "default", sourceName: publishingName }, audioStreamKey: { renditionName: "default", sourceName: publishingName } }
-      },
-      onConnectionStatusChange: (status, streamKeys) => {
-        if (status !== "disconnected") {
-          throw "I only know about one state"
-        }
-        for (let key of streamKeys) {
-          let stream = key.videoStreamKey?.sourceName?.sourceName;
-          streams = streams.filter(x => x !== stream);
-          console.log(`Stream disconnected: ${stream}`);
-          handleNewStream();
-        }
-      }
+  onConnection(app: string, _url: string) {
+    if (app === "mosaic") {
+      return { accept: true };
+    } else {
+      return { accept: false, reason: "App name must be mosaic" };
     }
-  );
+  }
 
-  let compose: ComposeVideoNode<string> | undefined = undefined;
-  handleNewStream = () => {
-    console.log("HNS", streams);
-    if (compose === undefined && streams.length > 0) {
-      norsk.processor.transform.composeOverlay({
-        id: "compose",
-        referenceStream: streams[0],
-        referenceResolution: { width: 100, height: 100 }, // make it % based
-        outputResolution: { width: 1280, height: 720 },
-        parts: createParts(streams)
-      }).then(async x => {
-        compose = x;
-        compose.subscribeToPins([{
-          source: input,
-          sourceSelector: (streamMetadata: StreamMetadata[]) => {
-            let pins: PinToKey<string> = {};
-            for (let stream of streams) {
-              pins[stream] = videoStreamKeys(streamMetadata).filter(x => x?.sourceName == stream);
-            }
-            return pins;
-          }
-        }]);
+  onStream(_app: string, _url: string, _streamId: number, publishingName: string): OnStreamResult {
+    this.streams.push(publishingName);
+    this.handleNewStream();
 
-        let encode = await norsk.processor.transform.videoEncodeLadder({
-          id: "ladder1",
-          rungs: [
+    return {
+      accept: true,
+      videoStreamKey: {
+        renditionName: "default",
+        sourceName: publishingName,
+      },
+      audioStreamKey: {
+        renditionName: "default",
+        sourceName: publishingName,
+      },
+    };
+  }
+
+  onConnectionStatusChange(status: string, streamKeys: RtmpServerStreamKeys) {
+    if (status !== "disconnected") {
+      // "I only know about one state";
+      return;
+    }
+    for (let key of streamKeys) {
+      let stream = key.videoStreamKey?.sourceName?.sourceName;
+      this.streams = this.streams.filter((x) => x !== stream);
+      console.log(`Stream disconnected: ${stream}`);
+      this.handleNewStream();
+    }
+  }
+
+  handleNewStream() {
+    if (this.compose === undefined && this.streams.length > 0) {
+      this.norsk.processor.transform
+        .videoCompose({
+          id: "compose",
+          referenceStream: this.streams[0],
+          referenceResolution: { width: 100, height: 100 }, // make it % based
+          outputResolution: { width: 1280, height: 720 },
+          parts: createParts(this.streams),
+        })
+        .then(async (x) => {
+          this.compose = x;
+          this.compose?.subscribeToPins([
             {
-              name: "high",
-              width: 854,
-              height: 480,
-              frameRate: { frames: 25, seconds: 1 },
-              codec: {
-                type: "x264",
-                bitrateMode: { value: 800000, mode: "abr" },
-                keyFrameIntervalMax: 50,
-                keyFrameIntervalMin: 50,
-                bframes: 0,
-                sceneCut: 0,
-                tune: "zerolatency",
-              }
-            }
-          ]
-        });
-        encode.subscribe([{ source: compose, sourceSelector: videoStreamKeys }]);
-        let output = await norsk.output.hlsTsVideo({ id: "video", segmentDurationSeconds: 4.0 });
-        output.subscribe([
-          { source: encode, sourceSelector: videoStreamKeys },
-        ]);
-        console.log("Media playlist", "http://localhost:6791/localHls/file/stream/256-high/playlist.m3u8");
+              source: this.rtmpInput!,
+              sourceSelector: (streamMetadata: StreamMetadata[]) => {
+                let pins: PinToKey<string> = {};
+                for (let stream of this.streams) {
+                  pins[stream] = videoStreamKeys(streamMetadata).filter(
+                    (x) => x?.sourceName == stream
+                  );
+                }
+                return pins;
+              },
+            },
+          ]);
 
-        let rtcOutput = await norsk.duplex.localWebRTC({ id: "webrtc" });
-        rtcOutput.subscribe([
-          { source: encode, sourceSelector: videoStreamKeys },
-          { source: audioSignalInput, sourceSelector: audioStreamKeys }
-        ]);
-        console.log("Local player: " + rtcOutput.playerUrl);
-      });
-    } else if (streams.length > 0) {
-      compose?.updateConfig({ parts: createParts(streams) });
+          let encode = await this.norsk.processor.transform.videoEncode({
+            id: "ladder1",
+            rungs: [ mkRung("high", 854, 480, 800000) ]
+          });
+          encode.subscribe([
+            { source: this.compose, sourceSelector: videoStreamKeys },
+          ]);
+
+          let output = await this.norsk.output.hlsTsVideo({
+            id: "video",
+            segmentDurationSeconds: 4.0,
+          });
+          output.subscribe([
+            { source: encode, sourceSelector: videoStreamKeys },
+          ]);
+          console.log(
+            "Media playlist",
+            "http://localhost:8080/localHls/file/stream/2-high/playlist.m3u8"
+          );
+
+          let rtcOutput = await this.norsk.duplex.webRtcBrowser({ id: "webrtc" });
+          rtcOutput.subscribe([
+            { source: encode, sourceSelector: videoStreamKeys },
+            { source: this.audioSignalInput, sourceSelector: audioStreamKeys },
+          ]);
+          console.log("Local player: " + rtcOutput.playerUrl);
+        });
+    } else if (this.streams.length > 0) {
+      this.compose?.updateConfig({ parts: createParts(this.streams) });
     }
   };
 }
 
 function createParts(streams: string[]) {
   let division = Math.ceil(Math.sqrt(streams.length));
-  return streams.map((stream, i) => (
-    {
-      destRect: {
-        width: 100 / division,
-        height: 100 / division,
-        x: (100 / division) * (i % division),
-        y: (100 / division) * Math.floor(i / division)
-      }, opacity: 1.0, pin: stream, sourceRect: { x: 0, y: 0, width: 100, height: 100 }, zIndex: 1
-    }));
+  return streams.map((stream, i) => ({
+    destRect: {
+      width: 100 / division,
+      height: 100 / division,
+      x: (100 / division) * (i % division),
+      y: (100 / division) * Math.floor(i / division),
+    },
+    opacity: 1.0,
+    pin: stream,
+    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+    zIndex: 1,
+  }));
 }
 
 function audioInputSettings(): AudioSignalGeneratorSettings {
-  return ({
+  return {
     sourceName: "wave1",
     channelLayout: "stereo",
     sampleRate: 48000,
     sampleFormat: "s16p",
-    wave: mkSine(220)
-  });
+    wave: mkSine(220),
+  };
 }
+
+function mkRung(name: string, width: number, height: number, bitrate: number): VideoEncodeRung {
+  return {
+    name,
+    width,
+    height,
+    frameRate: { frames: 25, seconds: 1 },
+    codec: {
+      type: "x264",
+      bitrateMode: { value: bitrate, mode: "abr" },
+      keyFrameIntervalMax: 50,
+      keyFrameIntervalMin: 50,
+      sceneCut: 0,
+      bframes: 0,
+      tune: "zerolatency",
+    },
+  };
+}
+

@@ -1,6 +1,6 @@
 import {
-  AudioMatrixMixerSettings,
-  AudioMatrixMixerSettingsUpdate,
+  AudioMixMatrixSettings,
+  AudioMixMatrixSettingsUpdate,
   Gain,
   CmafAudioOutputSettings,
   Norsk,
@@ -13,7 +13,7 @@ export async function main() {
   const norsk = await Norsk.connect();
 
   let input = await norsk.input.rtp(rtpInputSettings);
-  let matrixMixer = await norsk.processor.transform.audioMatrixMixer(initialMixerSettings);
+  let matrixMixer = await norsk.processor.transform.audioMixMatrix(initialMixerSettings);
   let audioOutput = await norsk.output.cmafAudio(hlsAudioSettings);
 
   matrixMixer.subscribe([{ source: input, sourceSelector: selectAudio }]);
@@ -26,7 +26,7 @@ export async function main() {
   // Update gains every 3s
   let wasPreviousA = true;
   setInterval(function () {
-    let newMixerConfig: AudioMatrixMixerSettingsUpdate;
+    let newMixerConfig: AudioMixMatrixSettingsUpdate;
     if (wasPreviousA) {
       newMixerConfig = { channelGains: mixB };
       wasPreviousA = false;
@@ -49,7 +49,7 @@ const mixB: Gain[][] = [
   [0.0, null, -6.0, null, -9.0, null],
 ];
 
-const initialMixerSettings: AudioMatrixMixerSettings = {
+const initialMixerSettings: AudioMixMatrixSettings = {
   id: "mixer",
   outputChannelLayout: "stereo",
   channelGains: mixA,

@@ -1,7 +1,7 @@
 
 import {
   ComposePart,
-  ComposeVideoSettings,
+  VideoComposeSettings,
   Norsk,
   selectAudio,
   selectVideo,
@@ -18,7 +18,7 @@ export async function main() {
     sourceName: "srtInput1",
   };
 
-  const rtmpSettings = { id: "rtmpInput", port: 5002 };
+  const rtmpSettings = { id: "rtmpInput" };
 
   const topRight = { x: 50, y: 5, width: 45, height: 45 };
   const bottomRight = { x: 50, y: 50, width: 45, height: 45 };
@@ -46,7 +46,7 @@ export async function main() {
 
   const parts = [background, embedded];
 
-  const composeSettings: ComposeVideoSettings<"background" | "embedded"> = {
+  const composeSettings: VideoComposeSettings<"background" | "embedded"> = {
     id: "compose",
     referenceStream: background.pin,
     referenceResolution: { width: 100, height: 100 }, // make it % based
@@ -64,9 +64,9 @@ export async function main() {
   let input1 = await norsk.input.srt(srtSettings);
   let input2 = await norsk.input.rtmpServer(rtmpSettings);
 
-  let compose = await norsk.processor.transform.composeOverlay(composeSettings);
+  let compose = await norsk.processor.transform.videoCompose(composeSettings);
 
-  let output = await norsk.duplex.localWebRTC({ id: "webrtc" });
+  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },

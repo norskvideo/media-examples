@@ -2,7 +2,7 @@ import {
   BrowserInputSettings,
   CMAFDestinationSettings,
   ComposePart,
-  ComposeVideoSettings,
+  VideoComposeSettings,
   HlsPushDestinationSettings,
   LocalPullDestinationSettings,
   Norsk,
@@ -11,7 +11,7 @@ import {
   selectVideo,
   SrtInputSettings,
   StreamMetadata,
-  VideoEncodeLadderRung,
+  VideoEncodeRung,
   videoStreamKeys,
   videoToPin,
   X264Codec,
@@ -50,11 +50,11 @@ export async function main() {
       },
       sourceRect: chopped,
       destRect: topLeft,
-      referenceResolution: undefined
+      referenceResolution: undefined,
     },
   ];
-  let updates = 0;
-  let config = configs[updates];
+  let currentConfig = 0;
+  let config = configs[currentConfig];
 
   const browserSettings: BrowserInputSettings = {
     url: config.browser.url,
@@ -80,12 +80,12 @@ export async function main() {
     zIndex: 1,
     sourceRect: config.sourceRect,
     destRect: config.destRect,
-    referenceResolution: config.referenceResolution
+    referenceResolution: config.referenceResolution,
   };
 
   const parts = [background, overlay];
 
-  const composeSettings: ComposeVideoSettings<"background" | "overlay"> = {
+  const composeSettings: VideoComposeSettings<"background" | "overlay"> = {
     id: "compose",
     referenceStream: background.pin,
     outputResolution: { width: 1280, height: 720 },
@@ -96,14 +96,14 @@ export async function main() {
   const norsk = await Norsk.connect({
     onShutdown: () => {
       console.log("Norsk has shutdown");
-      process.exit(1)
-    }
+      process.exit(1);
+    },
   });
 
   let input1 = await norsk.input.srt(srtSettings);
   let input2 = await norsk.input.browser(browserSettings);
 
-  let compose = await norsk.processor.transform.composeOverlay(composeSettings);
+  let compose = await norsk.processor.transform.videoCompose(composeSettings);
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },
@@ -111,13 +111,12 @@ export async function main() {
   ]);
 
   setInterval(() => {
-    let config = configs[updates++ % configs.length];
+    let config = configs[currentConfig++ % configs.length];
     input2.updateConfig(config.browser);
     overlay.sourceRect = config.sourceRect;
     overlay.destRect = config.destRect;
     compose.updateConfig({ parts });
   }, 22000);
-
 
   let videoStreamKeyConfig = {
     id: "video_stream_key",
@@ -141,19 +140,15 @@ export async function main() {
 
   let videoInput = await norsk.processor.transform.streamKeyOverride(videoStreamKeyConfig);
   let audioInputKeyed = await norsk.processor.transform.streamKeyOverride(audioStreamKeyConfig);
-  let audioInput = await norsk.processor.transform.metadataOverride({ audio: { bitrate: 20_000 } });
+  let audioInput = await norsk.processor.transform.streamMetadataOverride({ audio: { bitrate: 20_000 } });
 
-  videoInput.subscribe([
-    { source: compose, sourceSelector: selectVideo },
-  ]);
-  audioInputKeyed.subscribe([
-    { source: input1, sourceSelector: selectAudio },
-  ]);
+  videoInput.subscribe([{ source: compose, sourceSelector: selectVideo }]);
+  audioInputKeyed.subscribe([{ source: input1, sourceSelector: selectAudio }]);
   audioInput.subscribe([
     { source: audioInputKeyed, sourceSelector: selectAudio },
   ]);
 
-  function mkRung(name: string, width: number, height: number, bitrate: number, rungSpecificX264Settings?: Partial<X264Codec>): VideoEncodeLadderRung {
+  function mkRung(name: string, width: number, height: number, bitrate: number, rungSpecificX264Settings?: Partial<X264Codec>): VideoEncodeRung {
     return {
       name,
       width,
@@ -167,12 +162,12 @@ export async function main() {
         sceneCut: 0,
         bframes: 0,
         tune: "zerolatency",
-        ...rungSpecificX264Settings
+        ...rungSpecificX264Settings,
       },
     };
   }
 
-  let ladderRungs: VideoEncodeLadderRung[] = [
+  let ladderRungs: VideoEncodeRung[] = [
     mkRung("high", 1280, 720, 8000000,
       { // Override some of the default x264 settings for the high rung
         bframes: 3,
@@ -184,7 +179,7 @@ export async function main() {
     mkRung("low", 320, 180, 150000), // default x264 settings
   ];
 
-  let abrLadder = await norsk.processor.transform.videoEncodeLadder({ id: "ladder", rungs: ladderRungs });
+  let abrLadder = await norsk.processor.transform.videoEncode({ id: "ladder", rungs: ladderRungs });
 
   abrLadder.subscribe([{ source: videoInput, sourceSelector: selectVideo }]);
 
@@ -192,13 +187,35 @@ export async function main() {
     partDurationSeconds: 1.0,
     segmentDurationSeconds: 4.0,
   };
-  let destinations: CMAFDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+  let destinations: CMAFDestinationSettings[] = [
+    { type: "local", retentionPeriodSeconds: 10 },
+  ];
 
-  let masterOutput = await norsk.output.cmafMaster({ id: "master", playlistName: "master", destinations });
-  let audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings });
-  let highOutput = await norsk.output.cmafVideo({ id: "high", destinations, ...segmentSettings });
-  let mediumOutput = await norsk.output.cmafVideo({ id: "medium", destinations, ...segmentSettings });
-  let lowOutput = await norsk.output.cmafVideo({ id: "low", destinations, ...segmentSettings });
+  let masterOutput = await norsk.output.cmafMaster({
+    id: "master",
+    playlistName: "master",
+    destinations,
+  });
+  let audioOutput = await norsk.output.cmafAudio({
+    id: "audio",
+    destinations,
+    ...segmentSettings,
+  });
+  let highOutput = await norsk.output.cmafVideo({
+    id: "high",
+    destinations,
+    ...segmentSettings,
+  });
+  let mediumOutput = await norsk.output.cmafVideo({
+    id: "medium",
+    destinations,
+    ...segmentSettings,
+  });
+  let lowOutput = await norsk.output.cmafVideo({
+    id: "low",
+    destinations,
+    ...segmentSettings,
+  });
 
   // Wire up the ladder
   let ladderItem =
@@ -212,13 +229,19 @@ export async function main() {
       return [];
     };
 
-  highOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("high") },]);
-  mediumOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("medium") },]);
-  lowOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("low") },]);
-  audioOutput.subscribe([{ source: audioInput, sourceSelector: selectAudio },]);
+  highOutput.subscribe([
+    { source: abrLadder, sourceSelector: ladderItem("high") },
+  ]);
+  mediumOutput.subscribe([
+    { source: abrLadder, sourceSelector: ladderItem("medium") },
+  ]);
+  lowOutput.subscribe([
+    { source: abrLadder, sourceSelector: ladderItem("low") },
+  ]);
+  audioOutput.subscribe([{ source: audioInput, sourceSelector: selectAudio }]);
 
   masterOutput.subscribe([
-    { source: abrLadder, sourceSelector: selectAllVideos(ladderRungs.length), },
+    { source: abrLadder, sourceSelector: selectAllVideos(ladderRungs.length) },
     { source: audioInput, sourceSelector: selectAudio },
   ]);
 

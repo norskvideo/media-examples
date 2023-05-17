@@ -1,7 +1,7 @@
 import {
   Norsk,
   ComposePart,
-  ComposeVideoSettings,
+  VideoComposeSettings,
   BrowserInputSettings,
   selectVideo,
   selectAudio,
@@ -23,7 +23,7 @@ export async function main() {
     }
   });
 
-  let input = await norsk.input.rtmpServer({ id: "rtmpInput", port: 5001 });
+  let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
 
   const browserSettings: BrowserInputSettings = {
     id: "browser",
@@ -51,7 +51,7 @@ export async function main() {
 
   const parts = [backgroundPart, overlayPart];
 
-  const composeSettings: ComposeVideoSettings<"background" | "overlay"> = {
+  const composeSettings: VideoComposeSettings<"background" | "overlay"> = {
     id: "compose",
     referenceStream: backgroundPart.pin,
     outputResolution: { width: 1280, height: 720 },
@@ -59,7 +59,7 @@ export async function main() {
     outputPixelFormat: "bgra",
     parts,
   };
-  let overlay = await norsk.processor.transform.composeOverlay(composeSettings);
+  let overlay = await norsk.processor.transform.videoCompose(composeSettings);
 
   overlay.subscribeToPins([
     {
@@ -72,7 +72,7 @@ export async function main() {
     },
   ]);
 
-  let output = await norsk.duplex.localWebRTC({ id: "webrtc" });
+  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
 
   output.subscribe([
     { source: overlay, sourceSelector: selectVideo },

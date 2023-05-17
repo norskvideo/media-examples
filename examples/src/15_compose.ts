@@ -1,8 +1,8 @@
 import {
-  AudioMixerSettings,
+  AudioMixSettings,
   audioToPin,
   ComposePart,
-  ComposeVideoSettings,
+  VideoComposeSettings,
   LocalFileInputSettings,
   Norsk,
   selectAudio,
@@ -21,7 +21,7 @@ export async function main() {
     sourceName: "srtInput1",
   };
 
-  const rtmpSettings = { id: "rtmpInput", port: 5002 };
+  const rtmpSettings = { id: "rtmpInput" };
 
   const topRight = { x: 50, y: 5, width: 45, height: 45 };
   const bottomRight = { x: 50, y: 50, width: 45, height: 45 };
@@ -51,7 +51,7 @@ export async function main() {
 
   const parts = [background, embedded, logo];
 
-  const composeSettings: ComposeVideoSettings<
+  const composeSettings: VideoComposeSettings<
     "background" | "embedded" | "logo"
   > = {
     id: "compose",
@@ -73,11 +73,11 @@ export async function main() {
   const norsk = await Norsk.connect();
   let input1 = await norsk.input.srt(srtSettings);
   let input2 = await norsk.input.rtmpServer(rtmpSettings);
-  let input3 = await norsk.input.imageFile(fileSettings);
+  let input3 = await norsk.input.fileImage(fileSettings);
 
-  let compose = await norsk.processor.transform.composeOverlay(composeSettings);
+  let compose = await norsk.processor.transform.videoCompose(composeSettings);
 
-  let output = await norsk.duplex.localWebRTC({ id: "webrtc" });
+  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },
@@ -85,7 +85,7 @@ export async function main() {
     { source: input3, sourceSelector: videoToPin(logo.pin) },
   ]);
 
-  let mixerSettings: AudioMixerSettings<"input1" | "input2"> = {
+  let mixerSettings: AudioMixSettings<"input1" | "input2"> = {
     id: "mixer",
     onError: (err) => console.log("MIXER ERR", err),
     sampleRate: 48000,
@@ -96,7 +96,7 @@ export async function main() {
     outputSource: "output",
   };
 
-  let mixer = await norsk.processor.transform.audioMixer(mixerSettings);
+  let mixer = await norsk.processor.transform.audioMix(mixerSettings);
   mixer.subscribeToPins([
     { source: input1, sourceSelector: audioToPin('input1') },
     { source: input2, sourceSelector: audioToPin('input2') }

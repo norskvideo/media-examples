@@ -17,18 +17,18 @@ export async function main() {
   let videoOutput = await norsk.output.cmafVideo({ id: "video", destinations, ...segmentSettings });
   let masterOutput = await norsk.output.cmafMaster({ id: "master", playlistName: "master", destinations });
 
-  let metadataOverride = await norsk.processor.transform.metadataOverride({
+  let streamMetadataOverride = await norsk.processor.transform.streamMetadataOverride({
     id: "setBitrate",
     video: { bitrate: 150_000 },
     audio: { bitrate: 20_000 },
   });
-  metadataOverride.subscribe([
+  streamMetadataOverride.subscribe([
     { source: input, sourceSelector: selectAV },
   ]);
 
-  audioOutput.subscribe([{ source: metadataOverride, sourceSelector: selectAudio }]);
-  videoOutput.subscribe([{ source: metadataOverride, sourceSelector: selectVideo }]);
-  masterOutput.subscribe([{ source: metadataOverride, sourceSelector: selectAV }]);
+  audioOutput.subscribe([{ source: streamMetadataOverride, sourceSelector: selectAudio }]);
+  videoOutput.subscribe([{ source: streamMetadataOverride, sourceSelector: selectVideo }]);
+  masterOutput.subscribe([{ source: streamMetadataOverride, sourceSelector: selectAV }]);
 
   console.log(`Master playlist: ${masterOutput.playlistUrl}`);
   audioOutput.url().then(logMediaPlaylist("audio"));

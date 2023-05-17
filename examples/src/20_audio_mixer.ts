@@ -1,7 +1,7 @@
 import {
   AudioSignalGeneratorSettings,
   AudioGainSettings,
-  AudioMixerSettings,
+  AudioMixSettings,
   CmafAudioOutputSettings,
   mkSine,
   Norsk,
@@ -27,7 +27,7 @@ export async function main() {
   inputBfGain.subscribe([{ source: inputBf, sourceSelector: selectAudio }])
 
 
-  let mixerSettings: AudioMixerSettings<"input1" | "input2" | "input3" | "input4"> = {
+  let mixerSettings: AudioMixSettings<"input1" | "input2" | "input3" | "input4"> = {
     id: "audio-mixer",
     onError: (err: any) => console.log("MIXER ERR", err),
     sampleRate: 48000,
@@ -40,7 +40,7 @@ export async function main() {
     outputSource: "source",
   }
 
-  let mixer = await norsk.processor.transform.audioMixer(mixerSettings);
+  let mixer = await norsk.processor.transform.audioMix(mixerSettings);
   mixer.subscribeToPins([
     { source: inputCGain, sourceSelector: audioToPin('input1') },
     { source: inputEGain, sourceSelector: audioToPin('input2') },

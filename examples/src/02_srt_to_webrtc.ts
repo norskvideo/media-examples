@@ -4,7 +4,7 @@ export async function main() {
   const norsk = await Norsk.connect();
 
   let input = await norsk.input.srt(srtInputSettings);
-  let output = await norsk.duplex.localWebRTC({ id: "webrtc" })
+  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" })
 
   output.subscribe([{ source: input, sourceSelector: selectAV }]);
   console.log(`Local player: ${output.playerUrl}`);

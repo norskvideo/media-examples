@@ -1,18 +1,17 @@
 import {
   Norsk,
-  SmoothSwitcherSettings,
+  StreamSwitchSmoothSettings,
   SrtInputSettings,
-  VideoEncodeLadderRung,
+  VideoEncodeRung,
   avToPin,
   selectAudio,
-  selectVideo
+  selectVideo,
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
 const express = require("express");
 
-
 export async function main() {
-  let ladderRungs: VideoEncodeLadderRung[] = [
+  let ladderRungs: VideoEncodeRung[] = [
     {
       name: "high",
       width: 1280,
@@ -41,7 +40,7 @@ export async function main() {
     mode: "listener",
     sourceName: "camera2",
   };
-  let smoothSwitcherSettings: SmoothSwitcherSettings<"camera1" | "camera2"> = {
+  let streamSwitchSmoothSettings: StreamSwitchSmoothSettings<"camera1" | "camera2"> = {
     id: "switcher",
     activeSource: "camera1",
     outputSource: "output",
@@ -53,23 +52,23 @@ export async function main() {
   const norsk = await Norsk.connect();
   let camera1 = await norsk.input.srt(srtCamera1);
   let camera2 = await norsk.input.srt(srtCamera2);
-  let smoothSwitcher = await norsk.processor.control.smoothSwitcher(smoothSwitcherSettings);
-  let output = await norsk.duplex.localWebRTC({ id: "webrtc" });
+  let streamSwitchSmooth = await norsk.processor.control.streamSwitchSmooth(streamSwitchSmoothSettings);
+  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
 
-  smoothSwitcher.subscribeToPins([
+  streamSwitchSmooth.subscribeToPins([
     { source: camera1, sourceSelector: avToPin("camera1") },
     { source: camera2, sourceSelector: avToPin("camera2") },
   ]);
 
-  let ladder = await norsk.processor.transform.videoEncodeLadder({
+  let ladder = await norsk.processor.transform.videoEncode({
     id: "ladder",
     rungs: ladderRungs,
   });
-  ladder.subscribe([{ source: smoothSwitcher, sourceSelector: selectVideo }]);
+  ladder.subscribe([{ source: streamSwitchSmooth, sourceSelector: selectVideo }]);
 
   output.subscribe([
     { source: ladder, sourceSelector: selectVideo },
-    { source: smoothSwitcher, sourceSelector: selectAudio },
+    { source: streamSwitchSmooth, sourceSelector: selectAudio },
   ]);
 
   const app = express();
@@ -77,7 +76,7 @@ export async function main() {
   app.use(express.json());
   app.put("/switch/:source", (req: Request, res: Response) => {
     if (req.params.source == "camera1" || req.params.source == "camera2") {
-      smoothSwitcher.switchSource(req.params.source);
+      streamSwitchSmooth.switchSource(req.params.source);
       res.send("");
     } else {
       res.sendStatus(404);
@@ -85,23 +84,28 @@ export async function main() {
   });
   app.get("/", (req: Request, res: Response) => {
     res.send(`
+  <link rel="stylesheet" href="/static/doodle.css" type="text/css">
+  <link rel="stylesheet" href="/static/font.css" type="text/css">
   <script>
     function swap(source) {
       fetch("http://127.0.0.1:6792/switch/" + source, { method: "PUT" })
     }
   </script>
-  <p>
-    <button onclick="swap('camera1'); return false" style="font-size: 35">Camera 1</button>
-    <button onclick="swap('camera2'); return false" style="font-size: 35">Camera 2</button>
-  </p>
-  <iframe width=1280 height=720 frameBorder="0" src="${output.playerUrl}"></iframe>
+  <body class="doodle">
+    <p>
+      <button onclick="swap('camera1'); return false" style="font-size: 35">Camera 1</button>
+      <button onclick="swap('camera2'); return false" style="font-size: 35">Camera 2</button>
+    </p>
+    <iframe width=1280 height=720 frameBorder="0" src="${output.playerUrl}"></iframe>
+  </body>
   `);
   });
-
+  app.use("/static", express.static("static"));
   app.listen(port, () => {
     console.log(
       `Hosted smooth_switcher app listening on http://127.0.0.1:${port}/`
     );
+    console.log(`Local player: ${output.playerUrl}`);
   });
 }
 

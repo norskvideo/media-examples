@@ -9,7 +9,7 @@ import {
 export async function main() {
   const norsk = await Norsk.connect();
 
-  let input = await norsk.input.rtmpServer({ id: "rtmpInput", port: 5001 });
+  let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
   let destinations: CMAFDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
 
   let audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings });

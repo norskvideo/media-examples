@@ -1,13 +1,13 @@
-import { Norsk, StreamKeyOverrideSettings, TsFileOutputSettings, selectAudio, selectVideo } from "@norskvideo/norsk-sdk";
+import { Norsk, StreamKeyOverrideSettings, FileTsOutputSettings, selectAudio, selectVideo } from "@norskvideo/norsk-sdk";
 
 export async function main() {
     const norsk = await Norsk.connect();
 
-    let input = await norsk.input.rtmpServer({ id: "rtmpInput", port: 5001 });
+    let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
     let videoPidNormalizer = await norsk.processor.transform.streamKeyOverride(videoStreamKeyConfig);
     let audioPidNormalizer = await norsk.processor.transform.streamKeyOverride(audioStreamKeyConfig);
-    let output1 = await norsk.duplex.localWebRTC({ id: "webrtc" });
-    let output2 = await norsk.output.localTsFile(tsFileOutputSettings);
+    let output1 = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
+    let output2 = await norsk.output.fileTs(tsFileOutputSettings);
 
     videoPidNormalizer.subscribe([{ source: input, sourceSelector: selectVideo }]);
     audioPidNormalizer.subscribe([{ source: input, sourceSelector: selectAudio }]);
@@ -37,7 +37,7 @@ const audioStreamKeyConfig: StreamKeyOverrideSettings = {
         sourceName: "input",
     },
 };
-const tsFileOutputSettings: TsFileOutputSettings = {
+const tsFileOutputSettings: FileTsOutputSettings = {
     id: "localTsOutput",
     fileName: "/tmp/normalized.ts",
 };

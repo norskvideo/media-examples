@@ -2,7 +2,7 @@ import {
   BrowserInputSettings,
   CMAFDestinationSettings,
   ComposePart,
-  ComposeVideoSettings,
+  VideoComposeSettings,
   Norsk,
   selectAllVideos,
   selectAudio,
@@ -10,7 +10,7 @@ import {
   selectVideo,
   SrtInputSettings,
   StreamMetadata,
-  VideoEncodeLadderRung,
+  VideoEncodeRung,
   videoStreamKeys,
   videoToPin,
 } from "@norskvideo/norsk-sdk";
@@ -42,15 +42,15 @@ export async function main() {
   // bitrate to the stream's metadata before subscribing the master playlist to
   // the stream.
   let streamStarted = false;
-  let streamStats = await norsk.processor.control.streamStats({
-    id: "inputStreamStats",
+  let streamStatistics = await norsk.processor.control.streamStatistics({
+    id: "inputStreamStatistics",
     statsSampling: {
       // 1s for visualiser updates
       // 5s for console updates
       // 10s for stream bitrate estimation
       sampleIntervalsSeconds: [1, 5, 10],
     },
-    onStreamStats: async stats => {
+    onStreamStatistics: async stats => {
       let { audio, video } = stats;
       if (stats.sampleSizeSeconds === 10) {
         if (streamStarted) return;
@@ -58,9 +58,9 @@ export async function main() {
         console.log(`+ audio: ${(audio.bitrate / 1000).toFixed(1)}kbps`)
         console.log(`+ video: ${(video.bitrate / 1000).toFixed(1)}kbps`);
 
-        // Use NorskTransform.metadataOverride to add bitrate information
+        // Use NorskTransform.streamMetadataOverride to add bitrate information
         // to the video and audio streams
-        metadataOverride.updateConfig({
+        streamMetadataOverride.updateConfig({
           video: {
             bitrate: video.bitrate,
           },
@@ -72,7 +72,7 @@ export async function main() {
         // And subscribe the master playlist, now that the stream has bitrate
         // metadata
         masterOutput.subscribe([
-          { source: metadataOverride, sourceSelector: selectAV },
+          { source: streamMetadataOverride, sourceSelector: selectAV },
         ]);
       } else if (stats.sampleSizeSeconds === 5 && streamStarted) {
         console.log(`  audio: ${(audio.bitrate / 1000).toFixed(1)}kbps`)
@@ -80,14 +80,14 @@ export async function main() {
       }
     },
   });
-  streamStats.subscribe([
+  streamStatistics.subscribe([
     { source: srtAacInput, sourceSelector: selectAV },
   ]);
 
-  let metadataOverride = await norsk.processor.transform.metadataOverride({
+  let streamMetadataOverride = await norsk.processor.transform.streamMetadataOverride({
     id: "setBitrate",
   });
-  metadataOverride.subscribe([
+  streamMetadataOverride.subscribe([
     { source: srtAacInput, sourceSelector: selectAV },
   ]);
 
@@ -112,10 +112,10 @@ export async function main() {
   let highOutput = await norsk.output.cmafVideo(high);
 
   highOutput.subscribe([
-    { source: metadataOverride, sourceSelector: selectVideo },
+    { source: streamMetadataOverride, sourceSelector: selectVideo },
   ]);
   audioOutput.subscribe([
-    { source: metadataOverride, sourceSelector: selectAudio },
+    { source: streamMetadataOverride, sourceSelector: selectAudio },
   ]);
 
   console.log(`Local player: ${masterOutput.playlistUrl}`);
