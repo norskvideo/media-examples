@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 4,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -1372,7 +1372,7 @@
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1380,298 +1380,114 @@
         "y": 3
       },
       "id": 22,
-      "panels": [],
-      "title": "WebRTC",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
           },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "smooth",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
             },
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 13,
+            "x": 0,
+            "y": 4
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
             },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
             }
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
               },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 13,
-        "x": 0,
-        "y": 4
-      },
-      "id": 5,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "builder",
-          "expr": "avg by(stream) (norsk_queue_length{instance=\"$node\", mediaNodeId=\"webrtc\", nodeClass=\"sync\"})",
-          "legendFormat": "{{stream}} sync queue",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "builder",
-          "expr": "sum by(mediaType) (rate(norsk_outbound_media_count{instance=\"$node\", mediaNodeClass=\"Local WebRTC\", nodeClass=\"stream_input_generator\"}[$__rate_interval]))",
-          "hide": false,
-          "legendFormat": "{{mediaType}} frame count",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "WebRTC Output Stats",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
+              "editorMode": "builder",
+              "expr": "avg by(stream) (norsk_queue_length{instance=\"$node\", mediaNodeId=\"webrtc\", nodeClass=\"sync\"})",
+              "legendFormat": "{{stream}} sync queue",
+              "range": true,
+              "refId": "A"
             },
-            "filterable": true,
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
               },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 209
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "level"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 95
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "pid"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 121
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "text"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 393
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
-      "id": 6,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+              "editorMode": "builder",
+              "expr": "sum by(mediaType) (rate(norsk_outbound_media_count{instance=\"$node\", mediaNodeClass=\"Local WebRTC\", nodeClass=\"stream_input_generator\"}[$__rate_interval]))",
+              "hide": false,
+              "legendFormat": "{{mediaType}} frame count",
+              "range": true,
+              "refId": "B"
+            }
           ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Time"
-          }
-        ]
-      },
-      "pluginVersion": "9.5.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "editorMode": "builder",
-          "expr": "{source=\"norsk_erlang\"}",
-          "queryType": "range",
-          "refId": "A"
+          "title": "WebRTC Output Stats",
+          "type": "timeseries"
         }
       ],
-      "title": "Logs",
-      "transformations": [
-        {
-          "id": "extractFields",
-          "options": {
-            "format": "json",
-            "keepTime": false,
-            "replace": false,
-            "source": "Line"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Line": true,
-              "domain": true,
-              "error_logger": true,
-              "file": true,
-              "gl": true,
-              "id": true,
-              "labels": true,
-              "line": true,
-              "logger_formatter": true,
-              "mfa": true,
-              "otel_span_id": true,
-              "otel_trace_flags": true,
-              "otel_trace_id": true,
-              "source": true,
-              "time": true,
-              "tsNs": true,
-              "type": true
-            },
-            "indexByName": {
-              "Line": 3,
-              "Time": 1,
-              "data": 14,
-              "domain": 15,
-              "error_logger": 20,
-              "file": 6,
-              "gl": 7,
-              "id": 5,
-              "labels": 0,
-              "level": 2,
-              "line": 8,
-              "logger_formatter": 21,
-              "mfa": 9,
-              "otel_span_id": 17,
-              "otel_trace_flags": 18,
-              "otel_trace_id": 19,
-              "pid": 10,
-              "source": 13,
-              "text": 11,
-              "time": 12,
-              "tsNs": 4,
-              "type": 16
-            },
-            "renameByName": {}
-          }
-        }
-      ],
-      "type": "table"
+      "title": "WebRTC",
+      "type": "row"
     }
   ],
   "refresh": "5s",
@@ -1717,6 +1533,6 @@
   "timezone": "",
   "title": "Norsk Metrics",
   "uid": "a911ff76-eb0c-49cb-ac54-d04d06b7db74",
-  "version": 13,
+  "version": 2,
   "weekStart": ""
 }
