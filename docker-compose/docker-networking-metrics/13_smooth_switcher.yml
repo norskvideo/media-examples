@@ -46,6 +46,8 @@ services:
     container_name: norsk-source_0
     image: datarhei/ffmpeg
     entrypoint: ["/bin/sh","-c"]
+    volumes:
+      - ./examples/data:/tmp/data:ro
     command:
     - |
         sleep 1
@@ -58,6 +60,8 @@ services:
     container_name: norsk-source_1
     image: datarhei/ffmpeg
     entrypoint: ["/bin/sh","-c"]
+    volumes:
+      - ./examples/data:/tmp/data:ro
     command:
     - |
         sleep 1

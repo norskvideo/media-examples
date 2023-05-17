@@ -32,6 +32,8 @@ services:
     image: datarhei/ffmpeg
     network_mode: host
     entrypoint: ["/bin/sh","-c"]
+    volumes:
+      - ./examples/data:/tmp/data:ro
     command:
     - |
         sleep 1
@@ -43,6 +45,8 @@ services:
     image: datarhei/ffmpeg
     network_mode: host
     entrypoint: ["/bin/sh","-c"]
+    volumes:
+      - ./examples/data:/tmp/data:ro
     command:
     - |
         sleep 1
