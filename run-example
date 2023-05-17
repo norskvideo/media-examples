@@ -140,11 +140,19 @@ function stopAll() {
     local -r matchingNetworksCmd='docker network ls --filter name="^norsk-nw"'
     echo "Stopping the following containers"
     $matchingContainersCmd
-    $matchingContainersCmd -q | xargs --no-run-if-empty docker rm -f
+    if [[ "$OSTYPE" == "linux"* ]]; then
+        $matchingContainersCmd -q | xargs --no-run-if-empty docker rm -f
+    else
+        $matchingContainersCmd -q | xargs docker rm -f
+    fi
     echo
     echo "Deleting the following networks"
     $matchingNetworksCmd
-    $matchingNetworksCmd -q | xargs --no-run-if-empty docker network rm
+    if [[ "$OSTYPE" == "linux"* ]]; then
+        $matchingNetworksCmd -q | xargs --no-run-if-empty docker network rm
+    else
+        $matchingNetworksCmd -q | xargs docker network rm
+    fi
 }
 
 function main() {
