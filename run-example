@@ -37,7 +37,7 @@ fi
     echo "    DEBUG_URL_PREFIX - default: $DEBUG_URL_PREFIX_DEFAULT"
     echo
     echo "For example:"
-    echo "./run-example --license-file licence.json start rtmp_to_hls"
+    echo "./run-example --license-file license.json start rtmp_to_hls"
     echo
 }
 
@@ -159,10 +159,10 @@ function main() {
     local ymlPath
     local dockerComposeCmd
     local addMetrics=false
-    
+
     declare -a positionalArguments
     positionalArguments=()
-    
+
     # Defaults
     if [[ "$OSTYPE" == "linux"* ]]; then
         ymlPath="docker-compose/host-networking"
@@ -170,8 +170,12 @@ function main() {
         ymlPath="docker-compose/docker-networking"
     fi
     LOG_ROOT="norskLogs"
-    
-    
+
+    if [ "$(id -u)" == "0" ]; then
+        echo "Error: running as root is not supported. Please run as a non-root user."
+        exit 1
+    fi
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h | --help) usage ; exit 0 ;;
