@@ -6,6 +6,7 @@ import {
   selectVideo,
   selectAudio,
   videoToPin,
+  VideoEncodeRung,
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
 
@@ -72,10 +73,18 @@ export async function main() {
     },
   ]);
 
+  let encode = await norsk.processor.transform.videoEncode({
+    id: "ladder1",
+    rungs: [ mkRung("high", 854, 480, 800000) ]
+  });
+  encode.subscribe([
+    { source: overlay, sourceSelector: selectVideo },
+  ]);
+
   let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
 
   output.subscribe([
-    { source: overlay, sourceSelector: selectVideo },
+    { source: encode, sourceSelector: selectVideo },
     { source: input, sourceSelector: selectAudio },
   ]);
 
@@ -105,3 +114,22 @@ You'll find the score overlay in http://127.0.0.1:${port}/static/overlay-score.h
 and the UI for updating the score in http://127.0.0.1:${port}/static/overlay-ui.html`);
   });
 }
+
+function mkRung(name: string, width: number, height: number, bitrate: number): VideoEncodeRung {
+  return {
+    name,
+    width,
+    height,
+    frameRate: { frames: 25, seconds: 1 },
+    codec: {
+      type: "x264",
+      bitrateMode: { value: bitrate, mode: "abr" },
+      keyFrameIntervalMax: 50,
+      keyFrameIntervalMin: 50,
+      sceneCut: 0,
+      bframes: 0,
+      tune: "zerolatency",
+    },
+  };
+}
+

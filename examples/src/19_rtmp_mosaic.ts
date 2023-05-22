@@ -57,7 +57,7 @@ class Mosaic {
 
   onStream(_app: string, _url: string, _streamId: number, publishingName: string): OnStreamResult {
     this.streams.push(publishingName);
-    this.handleNewStream();
+    this.handleStreamChange();
 
     return {
       accept: true,
@@ -81,11 +81,11 @@ class Mosaic {
       let stream = key.videoStreamKey?.sourceName?.sourceName;
       this.streams = this.streams.filter((x) => x !== stream);
       console.log(`Stream disconnected: ${stream}`);
-      this.handleNewStream();
+      this.handleStreamChange();
     }
   }
 
-  handleNewStream() {
+  handleStreamChange() {
     if (this.compose === undefined && this.streams.length > 0) {
       this.norsk.processor.transform
         .videoCompose({

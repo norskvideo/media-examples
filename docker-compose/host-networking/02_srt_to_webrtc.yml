@@ -23,6 +23,9 @@ services:
       dockerfile: Dockerfile
       network: host # note this is for build only, not at runtime. Without it npm install can fail on some systems
     network_mode: host
+    environment:
+      - PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX}
+      - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
     depends_on:
       norsk:
         condition: service_healthy

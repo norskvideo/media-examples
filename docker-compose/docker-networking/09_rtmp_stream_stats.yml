@@ -41,6 +41,8 @@ services:
       network: host # note this is for build only, not at runtime. Without it npm install can fail on some systems
     environment:
       - NORSK_HOST=norsk
+      - PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX}
+      - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
     depends_on:
       norsk:
         condition: service_healthy
