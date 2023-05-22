@@ -30,19 +30,21 @@ services:
       norsk:
         condition: service_healthy
     command: node -e 'require("./lib/src/18_rtmp_server").main()'
+  # [Start of source]
   source:
     container_name: norsk-source
     image: datarhei/ffmpeg
     network_mode: host
     entrypoint: ["/bin/sh","-c"]
     volumes:
-      - ./examples/data:/tmp/data:ro
+      - ./data:/tmp/data:ro
     command:
     - |
         sleep 1
         ffmpeg -v error -re -f lavfi -i "sine=frequency=220:sample_rate=48000" -loop 1 -i data/test-src-still.png -vf drawtext=fontfile=/tmp/data/Arial.ttf:text="%{frame_num}":start_number=1:x=980:y=330:fontcolor=black:fontsize=40:box=1:boxcolor=white:boxborderw=5,scale=1280:720 -vcodec h264 -b:v 150000 -b:a 20000 -aspect 1280:720 -x264opts "keyint=25:min-keyint=25:no-scenecut:bframes=0" -bluray-compat true -tune stillimage -preset fast -pix_fmt yuv420p -acodec aac -metadata language=en -f flv 'rtmp://127.0.0.1:1935/norsk/high'
     depends_on:
       - example
+  # [End of source]
   prometheus:
     container_name: norsk-prometheus
     image: prom/prometheus:latest

@@ -30,16 +30,18 @@ services:
       norsk:
         condition: service_healthy
     command: node -e 'require("./lib/src/11_matrix_mixer").main()'
+  # [Start of source]
   source:
     container_name: norsk-source
     image: datarhei/ffmpeg
     network_mode: host
     entrypoint: ["/bin/sh","-c"]
     volumes:
-      - ./examples/data:/tmp/data:ro
+      - ./data:/tmp/data:ro
     command:
     - |
         sleep 1
         ffmpeg -v error -re -f lavfi -i "testsrc[out0];sine=frequency=220:sample_rate=48000[out1]" -re -f lavfi -i "testsrc[out0];sine=frequency=275:sample_rate=48000[out1]" -re -f lavfi -i "testsrc[out0];sine=frequency=660:sample_rate=48000[out1]" -re -f lavfi -i "testsrc[out0];sine=frequency=440:sample_rate=48000[out1]" -re -f lavfi -i "testsrc[out0];sine=frequency=550:sample_rate=48000[out1]" -re -f lavfi -i "testsrc[out0];sine=frequency=1320:sample_rate=48000[out1]" -filter_complex "[0:a][1:a][2:a][3:a][4:a][5:a]join=inputs=6:channel_layout=5.1:map=0.0-FL|1.0-FR|2.0-FC|3.0-LFE|4.0-BL|5.0-BR[a]" -map "[a]" -c:a pcm_s24be -f rtp 'rtp://127.0.0.1:5001'
     depends_on:
       - example
+  # [End of source]

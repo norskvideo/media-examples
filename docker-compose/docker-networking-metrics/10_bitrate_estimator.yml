@@ -16,6 +16,7 @@ services:
     ports:
       - 1935:1935/tcp # For RTMP sources
       - 5001:5001/udp # For SRT sources
+      - 5002:5002/udp # For SRT sources
       - 6790:6790/tcp # GRPC interface
       - 6791:6791/tcp # Debugging endpoints, including the workflow visualizer, logs, and docs
       - 8080:8080/tcp # Public endpoints for HLS/DASH and WebRTC players
@@ -30,6 +31,8 @@ services:
       - norskNetwork
   example:
     container_name: norsk-example-app
+    ports:
+      - 3000:3000/tcp # Some sources have an internal web UI, published on 3000
     build:
       context: examples
       dockerfile: Dockerfile
@@ -44,12 +47,13 @@ services:
     command: node -e 'require("./lib/src/10_bitrate_estimator").main()'
     networks:
       - norskNetwork
+  # [Start of source]
   source:
     container_name: norsk-source
     image: datarhei/ffmpeg
     entrypoint: ["/bin/sh","-c"]
     volumes:
-      - ./examples/data:/tmp/data:ro
+      - ./data:/tmp/data:ro
     command:
     - |
         sleep 1
@@ -58,6 +62,7 @@ services:
       - example
     networks:
       - norskNetwork
+  # [End of source]
   prometheus:
     container_name: norsk-prometheus
     image: prom/prometheus:latest
