@@ -105,6 +105,8 @@ function startExample() {
     cat "$dcFile" |
     sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
         -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
+        -e 's#${PUBLIC_URL_PREFIX}#'"$PUBLIC_URL_PREFIX"'#g' \
+        -e 's#${DEBUG_URL_PREFIX}#'"$DEBUG_URL_PREFIX"'#g' \
     >docker-compose.yml
     echo "$candidate"
     echo "Starting example ${candidate%.*}"
@@ -143,7 +145,7 @@ function stopAll() {
     if [[ "$OSTYPE" == "linux"* ]]; then
         $matchingContainersCmd -q | xargs --no-run-if-empty docker rm -f
     else
-        $matchingContainersCmd -q | xargs docker rm -f
+        ($matchingContainersCmd -q | xargs docker rm -f 2>/dev/null) || true
     fi
     echo
     echo "Deleting the following networks"
@@ -151,7 +153,7 @@ function stopAll() {
     if [[ "$OSTYPE" == "linux"* ]]; then
         $matchingNetworksCmd -q | xargs --no-run-if-empty docker network rm
     else
-        $matchingNetworksCmd -q | xargs docker network rm
+        ($matchingNetworksCmd -q | xargs docker network rm 2>/dev/null) || true
     fi
 }
 
