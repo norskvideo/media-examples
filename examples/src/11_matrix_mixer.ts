@@ -13,13 +13,15 @@ export async function main() {
   const norsk = await Norsk.connect();
 
   let input = await norsk.input.rtp(rtpInputSettings);
-  let matrixMixer = await norsk.processor.transform.audioMixMatrix(initialMixerSettings);
+  let matrixMixer = await norsk.processor.transform.audioMixMatrix(
+    initialMixerSettings
+  );
   let audioOutput = await norsk.output.cmafAudio(hlsAudioSettings);
 
   matrixMixer.subscribe([{ source: input, sourceSelector: selectAudio }]);
   audioOutput.subscribe([{ source: matrixMixer, sourceSelector: selectAudio }]);
 
-  audioOutput.url().then(playlistUrl => {
+  audioOutput.url().then((playlistUrl) => {
     console.log(`playlistUrl: ${playlistUrl}`);
   });
 
@@ -68,7 +70,7 @@ const rtpInputSettings: RtpInputSettings = {
   sourceName: "rtp1",
   streams: [
     {
-      ip: "127.0.0.1",
+      ip: "0.0.0.0",
       rtpPort: 5001,
       rtcpPort: 5002,
       iface: "any",

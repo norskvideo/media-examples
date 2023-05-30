@@ -6,6 +6,7 @@ import {
   avToPin,
   selectAudio,
   selectVideo,
+  clientHostExternal
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
 const express = require("express");
@@ -20,22 +21,22 @@ export async function main() {
       codec: {
         type: "x264",
         tune: "zerolatency",
-        preset: "ultrafast",
+        preset: "fast",
         profile: "high",
-        bitrateMode: { value: 600000, mode: "abr" },
+        bitrateMode: { value: 2000000, mode: "abr" },
       },
     },
   ];
   let srtCamera1: SrtInputSettings = {
     id: "camera1",
-    ip: "127.0.0.1",
+    ip: "0.0.0.0",
     port: 5001,
     mode: "listener",
     sourceName: "camera1",
   };
   let srtCamera2: SrtInputSettings = {
     id: "camera2",
-    ip: "127.0.0.1",
+    ip: "0.0.0.0",
     port: 5002,
     mode: "listener",
     sourceName: "camera2",
@@ -72,7 +73,8 @@ export async function main() {
   ]);
 
   const app = express();
-  const port = 6792;
+  const port = 3000;
+  const host = clientHostExternal();
   app.use(express.json());
   app.put("/switch/:source", (req: Request, res: Response) => {
     if (req.params.source == "camera1" || req.params.source == "camera2") {
@@ -88,7 +90,7 @@ export async function main() {
   <link rel="stylesheet" href="/static/font.css" type="text/css">
   <script>
     function swap(source) {
-      fetch("http://127.0.0.1:6792/switch/" + source, { method: "PUT" })
+      fetch("/switch/" + source, { method: "PUT" })
     }
   </script>
   <body class="doodle">
@@ -103,7 +105,7 @@ export async function main() {
   app.use("/static", express.static("static"));
   app.listen(port, () => {
     console.log(
-      `Hosted smooth_switcher app listening on http://127.0.0.1:${port}/`
+      `Hosted smooth_switcher app listening on http://${host}:${port}/`
     );
     console.log(`Local player: ${output.playerUrl}`);
   });

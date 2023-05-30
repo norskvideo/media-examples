@@ -5,19 +5,25 @@ cd "${0%/*}"
 declare LOG_ROOT
 declare LICENSE_FILE
 
-declare -r PUBLIC_URL_PREFIX_DEFAULT="http://127.0.0.1:8080"
+declare -r HOST_NAME=$(hostname 2>/dev/null || echo "127.0.0.1")
+
+declare -r CLIENT_HOST_DEFAULT=${HOST_NAME}
+declare -r CLIENT_HOST=${CLIENT_HOST:-$CLIENT_HOST_DEFAULT}
+
+declare -r PUBLIC_URL_PREFIX_DEFAULT="http://${HOST_NAME}:8080"
 declare    PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-$PUBLIC_URL_PREFIX_DEFAULT}
 
-declare -r DEBUG_URL_PREFIX_DEFAULT="http://127.0.0.1:6791"
+declare -r DEBUG_URL_PREFIX_DEFAULT="http://${HOST_NAME}:6791"
 declare -r DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX:-$DEBUG_URL_PREFIX_DEFAULT}
 
-declare -r GRAFANA_URL_DEFAULT="http://127.0.0.1:3100"
+declare -r GRAFANA_URL_DEFAULT="http://${HOST_NAME}:3100"
 declare -r GRAFANA_URL=${GRAFANA_URL:-$GRAFANA_URL_DEFAULT}
 
 function usage() {
     # TODO :)
-    echo "Usage: run-example --license-file <license-file> [options] [cmd]"
+    echo "Usage: run-example [options] [cmd]"
     echo "  Options:"
+    echo "    --license-file <license-file> : where on the host to mount the Norsk license file."
     echo "    --log-root <log-dir> : where on the host to mount Norsk's logs.  The actual logs will be in a subdirectory with the name of the example you are running.  Default ./norskLogs"
 if [[ "$OSTYPE" == "linux"* ]]; then
     echo "    --network-mode [docker|host] : whether the example should run in host or docker network mode.  Defaults to host"
@@ -31,14 +37,15 @@ fi
     echo "        or just the name (e.g. hello_norsk)"
     echo "    stop : Stops the last launched example with \`docker compose down\`"
     echo "    stop-all : Stops all example containers and deletes the associated docker network (if any)"
+    echo
     echo "  Environment variables:"
-    echo "    The run script allows the displayed URLs to have a custom URL root to"
-    echo "    facilitate ease of viewing outputs / visualiser / documentation etc."
-    echo "    PUBLIC_URL_PREFIX - default: $PUBLIC_URL_PREFIX_DEFAULT"
-    echo "    DEBUG_URL_PREFIX - default: $DEBUG_URL_PREFIX_DEFAULT"
+    echo "    LICENSE_FILE - the value of --license-file can alternatively be provided using this environment variable"
+    echo "    PUBLIC_URL_PREFIX - adjust the prefix applied to displayed public URLs. default: $PUBLIC_URL_PREFIX_DEFAULT"
+    echo "    DEBUG_URL_PREFIX - adjust the prefix applied to displayed debug URLs. default: $DEBUG_URL_PREFIX_DEFAULT"
     echo
     echo "For example:"
     echo "./run-example --license-file license.json start rtmp_to_hls"
+    echo "LICENSE_FILE=license.json ./run-example start rtmp_to_hls"
     echo
 }
 
@@ -109,7 +116,8 @@ function startExample() {
           -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
           -e 's#${PUBLIC_URL_PREFIX}#'"$PUBLIC_URL_PREFIX"'#g' \
           -e 's#${DEBUG_URL_PREFIX}#'"$DEBUG_URL_PREFIX"'#g' \
-    | ( [[ "$runSource" == "false" ]] && awk 'BEGIN {flag=1}/.*\[Start of source\]/{flag=0} /.*\[End of source\]/{flag=1} flag' || cat ) \
+          -e 's#${CLIENT_HOST}#'"$CLIENT_HOST"'#g' \
+    | ( [[ "$runSource" == "false" ]] && awk 'BEGIN {flag=1}/.*\[Start of source\]/{flag=0; next} /.*\[End of source\]/{flag=1; next} flag' || cat ) \
     >docker-compose.yml
 
     echo "Starting example ${candidate%.*}"
@@ -169,6 +177,17 @@ function stopAll() {
     fi
 }
 
+function downloadMediaAssets() {
+    MEDIA_ASSETS="Weaving.ts InkDrop.ts"
+
+    for i in $MEDIA_ASSETS
+    do
+        if [[ ! -f data/$i ]]; then
+	        wget -O data/$i https://s3.eu-west-1.amazonaws.com/norsk.video/media-examples/data/$i
+        fi
+    done
+}
+
 function main() {
     local ymlPath
     local dockerComposeCmd
@@ -194,7 +213,10 @@ function main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h | --help) usage ; exit 0 ;;
-            --license-file) export LICENSE_FILE="$2" ; shift 2 ;;
+            --license-file)
+                export LICENSE_FILE="$2"
+                shift 2
+            ;;
             --log-root) 
                 # Remove trailing slash if present
                 export LOG_ROOT=${2%/}
@@ -268,6 +290,7 @@ function main() {
     if [[ $# -eq 2 ]]; then
         case "$1" in
             start)
+                downloadMediaAssets
                 echo "Stopping any current example"
                 echo
                 stopExample

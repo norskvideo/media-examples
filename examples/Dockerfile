@@ -13,6 +13,3 @@ RUN npm install
 COPY . .
 
 RUN npm run build
-
-
-CMD [ "node", "lib/src/main.js", "list" ]

@@ -1,5 +1,5 @@
 {
-  "exclude": ["./gen", "./lib", "./norsk-examples-remote", "./todo"],
+  "exclude": ["./gen", "./lib", "./norsk-examples-remote", "./public-repo-pre-publish", "./data", "./todo"],
   "compilerOptions": {
     "allowJs": true,
     "composite": true,

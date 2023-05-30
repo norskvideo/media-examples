@@ -8,7 +8,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v1.0.332-main
+    image: norskvideo/norsk:v1.0.334-main
     network_mode: host
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro
@@ -26,6 +26,8 @@ services:
     environment:
       - PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX}
       - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
+      - CLIENT_HOST_EXTERNAL=${CLIENT_HOST}
+      - CLIENT_HOST_INTERNAL=127.0.0.1
     depends_on:
       norsk:
         condition: service_healthy
@@ -41,7 +43,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -f lavfi -i "sine=frequency=220:sample_rate=48000" -loop 1 -i data/test-src-still.png -vf drawtext=fontfile=/tmp/data/Arial.ttf:text="%{frame_num}":start_number=1:x=980:y=330:fontcolor=black:fontsize=40:box=1:boxcolor=white:boxborderw=5,scale=1280:720 -vcodec h264 -b:v 150000 -b:a 20000 -aspect 1280:720 -x264opts "keyint=25:min-keyint=25:no-scenecut:bframes=0" -bluray-compat true -tune stillimage -preset fast -pix_fmt yuv420p -acodec aac -metadata language=en -f mpegts -flush_packets 0 'srt://127.0.0.1:5001'
+        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts -vcodec copy -acodec copy -f mpegts -flush_packets 0 'srt://127.0.0.1:5001'
     depends_on:
       - example
   # [End of source]
@@ -56,7 +58,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -f lavfi -i "rgbtestsrc[out0];sine=frequency=220:sample_rate=48000[out1]" -vcodec h264 -b:v 150000 -b:a 20000 -aspect 1280:720 -x264opts "keyint=25:min-keyint=25:no-scenecut:bframes=0" -bluray-compat true -tune stillimage -preset fast -pix_fmt yuv420p -acodec aac -metadata language=en -f flv 'rtmp://127.0.0.1:1935/acme/high'
+        ffmpeg -v error -re -stream_loop -1 -i data/Weaving.ts -vcodec copy -acodec copy -f flv 'rtmp://127.0.0.1:1935/acme/high'
     depends_on:
       - example
   # [End of source]

@@ -61,4 +61,288 @@ There are several reasons why you probably don't want b-frames in a WebRTC strea
 
 This makes it impossible for Norsk Media to always "do the right thing" for WebRTC output from an H264 source. It cannot always know what "the right thing" is.  There are similar challenges present for HLS - in particular whether the part / segment length choices declared in the HLS nodes are compatible with the inbound streams.
 
-These challenges tend to disappear when your application is doing a transcode as you can control the generated media.  That said, passthrough is fully supported by Norsk Media and can be a very valuable technique.  
+These challenges tend to disappear when your application is doing a transcode as you can control the generated media.  That said, passthrough is fully supported by Norsk Media and can be a very valuable technique.  If you are looking to do passthrough in production we recommend you go read link:xxx.yyy[TODO.]
+
+
+For example 
+them a source that definitely is incompatible with the output type in the example then Norsk will transcode.  
+
+
+ is a necessity. 
+
+)  / compose etc all require it).  Certain outputs operate best with particular characteristics.  For example WebRTC b-frames, HLS GopLength / fps / settings in your master playlist need to align
+
+
+As a rule, you have to make sure that your sources mat
+
+Sources are all test cards - so we don't have to download loads of stuff
+
+From known sources (list of them) - no-brames etc
+
+Here are some OBS settings that work with the examples...
+
+
+
+
+
+Whereas 
+```
+./run-example --license=path/to/my_license.json 02_audio_signal`
+```
+Will give
+[example]
+`Local player: http://localhost:8080/localWebRTC/localRtcOutput/player.html`
+
+Point a browser at that URL and press play and you should see a stream...
+
+== Some Details
+
+  --with-turn / player-with-turn?
+  
+  Came back here once you've run a few 
+
+  About the exmaples
+
+load example - identical to previous but with load logged
+
+If compile step fails, does run-example tell you nicely?
+
+Output from run-steps (docker logs example-app)
+
+Warning sent to client app - webrtc and b-frames - HLS and bad settings
+
+SDK - helper function - FPS / Gop Length -> suggested settings
+
+Docker-compose installation - an exmaple of us setting up prerequisites from an empty box.
+
+Fillin processor - resurrected
+
+SRT / RTMP - what if data stops flowing but socket still there?
+
+Turn
+
+Mac / Windows Subsystem for Linux 
+[EC2 Linux / Ubuntu]
+
+Reorder the code in the examples so the punchline is first
+
+"Human.log" 
+
+composeOverlay - should be deleted? -  unified compose replaces it
+git rename script
+________________________________________________________________
+
+Building narrative 1,2,3...
+
+Rtmp - rtmp that checks URL then...
+compose -> dynamic compose ->
+norsk callbacks
+
+
+docker-compose - abort on failure set please
+
+Comments welcome - new examples welcome PRs (improvements to the docs welcome...)
+________________________________________________________________
+git clone ???? norskMediaExamples
+cd ????
+
+Readme.adoc
+Readme.pdf?
+Readme.txt
+
+  Categorised by more fully featured
+
+  TLDR - so long as you have a Norsk licence file,docker and docker-compose availble
+  Feel free to give it a try
+  `./run-example --help`
+  `./run-example --licence=foo 01_hello_norsk`
+  
+  --with-turn / player-with-turn?
+  
+  Came back here once you've run a few 
+
+
+
+"Norsk, Passthrough and Real World Sources"
+  You have to make sure your source is compatible with your Norsk application.  If transcode - probably all good
+  
+  If no trancsode - ?ability to deal with dropped frames etc?
+  
+  However, passthrough is also supported - but be aware that certain outputs (in )
+  From known *incompatible* source - with b-frames
+
+  Norsk warns - maybe your player supports b-frames (let us know if you have a good one!)  
+
+  Screenshot / video of b-frames
+  Warning sent to client app
+
+
+  , then Norsk will automatically put in a transcode (you can see this with the audio transcode from aac -> opus in most cases).  However, it the source might work, Norsk does not transcode - which means if your source does not....
+
+  Expected scenarios-
+    Your source - you control the settings - pasthrough is fine
+    3rd party encode - you control the settings - pasthrough is fine
+    Unknown source - passthrough is risky!
+
+Arbitrary source cooking - if you want to run passthrough with an arbitrary source (why???) here's how you might create a source
+
+It can be useful to not to a transcode during developemnt (so you can save your baterry life if you are away from power).  Here's an example of how you can create "cooked" content that should be safe.
+
+
+Local development environments - link to docs
+
+  Above was to minimise dependencies - if that's how you dev you, that's cool
+  Node version
+  You still need docker - here's an exmaple of how you launch it?
+  You still need a licence file
+  If you are running your Node code on your local machine here's how you'd run...
+  
+  Here's what we do
+  Node version
+  Launch norsk container
+  Run our own ffmpeg
+  Or get the example to run ffmpeg for you (but that might well be a contribution encode mcast in your case and you never have to run a source...)
+  Run it yourself...
+  We will run it for you...
+
+  FFMEG=path_to_my_ffmpeg (x264 and SRT)
+  FFMPEG=docker run..... 
+  If I want to run "host-client" Basically all you need is Node(we use LTS -0.18.5) and Docker.  If you want to see the sources we run for each of the examples you can find them in the docker-compose.yaml file for each demo
+
+  Check node alternatives?  bun?
+
+Production environments
+
+Docker
+   
+
+- src 
+  - common / helpers / utils
+    interface.ts
+    media.ts
+  01_foo
+  02_asdas/...
+  
+- docker-compose
+    Dockerfile / clientDockerfile /
+    01_hello_norsk.yaml
+    02_simple.rtmp_to_webrtc.yaml
+
+    
+
+run-example (cd to dir and do stuff...)
+  * licence file as arg?
+
+run-example- 
+  - assume presence of node (check version)
+  - check for presence of ffmpeg if flag is set
+  - check Norsk container is running?
+  
+start-norsk-container
+  - check for presence of licence file
+  - mounts / ports 
+
+localhost / 127.0.0.1 / "norsk"
+
+
+- docker-compose
+  - simple
+    - hello_media
+      ?? Why are the ports different
+      docker-compose.yaml
+
+  do you end up with lots of containers?
+      
+    docker-compose.simple.hello_media.yaml
+    docker-compose.simple.rtmp_to_webrtc.yaml
+
+
+
+
+
+Where do we host the docs
+
+
+advanced/remote_commentary
+advanced/rtmp_mosaic
+advanced/rtmp_server
+intermediate/browser_compose
+intermediate/compose
+intermediate/pic_in_pic
+intermediate/rtmp_to_ladder
+simple/audio_signal
+simple/hello_media
+simple/matrix_mixer
+simple/mp4file_to_webrtc
+simple/overlay_score
+simple/rtmp_to_hls
+simple/rtmp_to_localmp4
+simple/rtmp_to_webrtc
+simple/srt_to_webrtc
+
+
+advanced/remote_commentary
+advanced/rtmp_mosaic
+advanced/rtmp_server
+??? intermediate/browser_compose - delete me?
+??? intermediate/compose 
+intermediate/pic_in_pic
+intermediate/rtmp_to_ladder
+04.5_simple/audio_signal
+01_hello_norsk - log out the version number and stop
+08_simple/matrix_mixer
+06_simple/mp4file_to_webrtc
+07_simple/overlay_score
+04_simple/rtmp_to_hls
+05_simple/rtmp_to_localmp4
+02_simple/rtmp_to_webrtc
+03_simple/srt_to_webrtc
+
+hardward_dependent
+  NETINT
+  Nvidia
+  Decklink
+  AMD
+
+Clone repo
+ls
+./run-example
+  - usage 
+
+
+
+Use getopts
+
+./run-example
+  usage
+    [--host-client]
+    
+    --docs (prints out the URL / launches something)
+    
+    --stop-all
+
+    --list-examples
+    --help
+    --licence
+    --network
+    ~/.config/norsk - with config stuff in it?
+
+Check if another example is running and exit (suggest --stop-all)
+
+Of course you can run multiple instances - just map your ports appropriately (but that's a Docker thing, not a Norsk thing)
+
+does docker-compose up AND docker-compose down
+
+./run-example --list
+  ...
+
+./run-example --licence=mylicence 01_hello_norsk
+  -- Docker version / docker-compose not found...
+  Disk space if containers not there - check with docker images?
+  
+Feel free to tweak and try again...
+
+What if the docker examples want 
+
+    
+  list of examples

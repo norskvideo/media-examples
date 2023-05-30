@@ -42,7 +42,7 @@ const segmentSettings = {
 
 const srtInputSettings: SrtInputSettings = {
   id: "srtInput",
-  ip: "127.0.0.1",
+  ip: "0.0.0.0",
   port: 5001,
   mode: "listener",
   sourceName: "camera1",

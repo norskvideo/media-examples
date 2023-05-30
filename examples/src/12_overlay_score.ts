@@ -3,6 +3,8 @@ import {
   ComposePart,
   VideoComposeSettings,
   BrowserInputSettings,
+  clientHostExternal,
+  clientHostInternal,
   selectVideo,
   selectAudio,
   videoToPin,
@@ -18,17 +20,18 @@ export async function main() {
   runWebServer();
 
   const norsk = await Norsk.connect({
-    onShutdown: () => {
-      console.log("Norsk has shutdown");
-      process.exit(1)
-    }
+    // onShutdown: () => {
+    //   console.log("Norsk has shutdown");
+    //   process.exit(1);
+    // },
   });
 
   let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
 
+  const host = clientHostInternal();
   const browserSettings: BrowserInputSettings = {
     id: "browser",
-    url: "http://127.0.0.1:3000/static/overlay-score.html",
+    url: `http://${host}:3000/static/overlay-score.html`,
     resolution: { width: 1280, height: 720 },
     sourceName: "browserOverlay",
     frameRate: { frames: 25, seconds: 1 },
@@ -75,11 +78,9 @@ export async function main() {
 
   let encode = await norsk.processor.transform.videoEncode({
     id: "ladder1",
-    rungs: [ mkRung("high", 854, 480, 800000) ]
+    rungs: [mkRung("high", 854, 480, 800000)],
   });
-  encode.subscribe([
-    { source: overlay, sourceSelector: selectVideo },
-  ]);
+  encode.subscribe([{ source: overlay, sourceSelector: selectVideo }]);
 
   let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
 
@@ -109,13 +110,19 @@ function runWebServer() {
     res.send("");
   });
   app.listen(port, () => {
+    const host = clientHostExternal();
     console.log(`overlay_score running on port ${port}.
-You'll find the score overlay in http://127.0.0.1:${port}/static/overlay-score.html
-and the UI for updating the score in http://127.0.0.1:${port}/static/overlay-ui.html`);
+You'll find the score overlay in http://${host}:${port}/static/overlay-score.html
+and the UI for updating the score in http://${host}:${port}/static/overlay-ui.html`);
   });
 }
 
-function mkRung(name: string, width: number, height: number, bitrate: number): VideoEncodeRung {
+function mkRung(
+  name: string,
+  width: number,
+  height: number,
+  bitrate: number
+): VideoEncodeRung {
   return {
     name,
     width,

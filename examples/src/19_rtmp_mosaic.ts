@@ -47,7 +47,7 @@ class Mosaic {
     });
   }
 
-  onConnection(app: string, _url: string) {
+  onConnection(_cid: string, app: string, _url: string) {
     if (app === "mosaic") {
       return { accept: true };
     } else {
@@ -55,7 +55,7 @@ class Mosaic {
     }
   }
 
-  onStream(_app: string, _url: string, _streamId: number, publishingName: string): OnStreamResult {
+  onStream(_cid: string, _app: string, _url: string, _streamId: number, publishingName: string): OnStreamResult {
     this.streams.push(publishingName);
     this.handleStreamChange();
 
@@ -72,7 +72,7 @@ class Mosaic {
     };
   }
 
-  onConnectionStatusChange(status: string, streamKeys: RtmpServerStreamKeys) {
+  onConnectionStatusChange(_cid: string, status: string, streamKeys: RtmpServerStreamKeys) {
     if (status !== "disconnected") {
       // "I only know about one state";
       return;
@@ -114,7 +114,7 @@ class Mosaic {
 
           let encode = await this.norsk.processor.transform.videoEncode({
             id: "ladder1",
-            rungs: [ mkRung("high", 854, 480, 800000) ]
+            rungs: [mkRung("high", 854, 480, 800000)]
           });
           encode.subscribe([
             { source: this.compose, sourceSelector: videoStreamKeys },
@@ -123,6 +123,7 @@ class Mosaic {
           let output = await this.norsk.output.hlsTsVideo({
             id: "video",
             segmentDurationSeconds: 4.0,
+            destinations: [{ type: "local", retentionPeriodSeconds: 60 }],
           });
           output.subscribe([
             { source: encode, sourceSelector: videoStreamKeys },

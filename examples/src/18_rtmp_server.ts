@@ -113,12 +113,13 @@ export async function main() {
   let input = await norsk.input.rtmpServer({
     id: "rtmp",
 
-    onConnection: (app: string, url: string) => {
+    onConnection: (_cid: string, app: string, url: string) => {
       console.log("Got RTMP connection", app, url);
       return { accept: true }; // accept all!!!
     },
 
     onStream: (
+      _cid: string,
       app: string,
       url: string,
       streamId: number,
