@@ -31,6 +31,7 @@ class Mosaic {
   rtmpInput: RtmpServerInputNode | undefined;
   compose: VideoComposeNode<string> | undefined = undefined;
   streams: string[] = [];
+  composeCreatePending: boolean = false;
 
   constructor(norsk: Norsk, audioSignalInput: AudioSignalGeneratorNode) {
     this.norsk = norsk;
@@ -86,7 +87,8 @@ class Mosaic {
   }
 
   handleStreamChange() {
-    if (this.compose === undefined && this.streams.length > 0) {
+    if (this.compose === undefined && this.streams.length > 0 && !this.composeCreatePending) {
+      this.composeCreatePending = true;
       this.norsk.processor.transform
         .videoCompose({
           id: "compose",
@@ -140,8 +142,11 @@ class Mosaic {
           ]);
           console.log("Local player: " + rtcOutput.playerUrl);
         });
-    } else if (this.streams.length > 0) {
+    } else if (this.compose != undefined && this.streams.length > 0) {
       this.compose?.updateConfig({ parts: createParts(this.streams) });
+    }
+    else if (this.streams.length > 0) {
+      setInterval(this.handleStreamChange.bind(this), 500);
     }
   };
 }
