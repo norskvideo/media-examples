@@ -1,13 +1,13 @@
 import {
   AudioMixSettings,
-  audioToPin,
   ComposePart,
-  VideoComposeSettings,
   LocalFileInputSettings,
   Norsk,
+  SrtInputSettings,
+  VideoComposeSettings,
+  audioToPin,
   selectAudio,
   selectVideo,
-  SrtInputSettings,
   videoToPin,
 } from "@norskvideo/norsk-sdk";
 import fs from "fs/promises";
@@ -77,7 +77,7 @@ export async function main() {
 
   let compose = await norsk.processor.transform.videoCompose(composeSettings);
 
-  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
+  let output = await norsk.output.whep({ id: "webrtc" });
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },

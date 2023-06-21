@@ -1,12 +1,12 @@
 import {
   Norsk,
-  StreamSwitchSmoothSettings,
   SrtInputSettings,
+  StreamSwitchSmoothSettings,
   VideoEncodeRung,
   avToPin,
+  clientHostExternal,
   selectAudio,
   selectVideo,
-  clientHostExternal
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
 const express = require("express");
@@ -54,7 +54,7 @@ export async function main() {
   let camera1 = await norsk.input.srt(srtCamera1);
   let camera2 = await norsk.input.srt(srtCamera2);
   let streamSwitchSmooth = await norsk.processor.control.streamSwitchSmooth(streamSwitchSmoothSettings);
-  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
+  let output = await norsk.output.whep({ id: "webrtc" });
 
   streamSwitchSmooth.subscribeToPins([
     { source: camera1, sourceSelector: avToPin("camera1") },

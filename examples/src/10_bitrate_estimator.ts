@@ -1,18 +1,10 @@
 import {
-  BrowserInputSettings,
-  CMAFDestinationSettings,
-  ComposePart,
-  VideoComposeSettings,
+  CmafDestinationSettings,
   Norsk,
-  selectAllVideos,
+  SrtInputSettings,
   selectAudio,
   selectAV,
   selectVideo,
-  SrtInputSettings,
-  StreamMetadata,
-  VideoEncodeRung,
-  videoStreamKeys,
-  videoToPin,
 } from "@norskvideo/norsk-sdk";
 
 export async function main() {
@@ -91,7 +83,7 @@ export async function main() {
     { source: srtAacInput, sourceSelector: selectAV },
   ]);
 
-  let destinations: CMAFDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+  let destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
 
   let masterPlaylistSettings = { id: "master", playlistName: "master", destinations };
   let audio = {

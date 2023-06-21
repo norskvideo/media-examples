@@ -1,12 +1,29 @@
-import { CMAFDestinationSettings, Norsk, selectAllVideos, selectAudio, selectVideo, StreamMetadata, VideoEncodeRung, videoStreamKeys } from "@norskvideo/norsk-sdk";
+import {
+  CmafDestinationSettings,
+  Norsk, 
+  RtmpServerInputNode,
+  SrtInputNode, 
+  StreamMetadata, 
+  VideoEncodeRung, 
+  selectAllVideos,
+  selectAudio,
+  selectVideo, 
+  videoStreamKeys,
+} from "@norskvideo/norsk-sdk";
 
 export async function main(): Promise<void> {
   const norsk = await Norsk.connect();
   let rtmpInput = { id: "rtmp" };
   let input = await norsk.input.rtmpServer(rtmpInput);
 
+  // We call input_to_ladder() rather than have the code inline, simply to highlight the common code between this
+  // and srt_to_ladder.  Just the input changes - nothing else.
+  input_to_ladder(norsk, input);
+}
+
+export async function input_to_ladder(norsk: Norsk, input: RtmpServerInputNode | SrtInputNode): Promise<void> {
   let abrLadder = await norsk.processor.transform.videoEncode({ id: "ladder", rungs: ladderRungs });
-  let destinations: CMAFDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 60 }]
+  let destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 60 }]
   let masterOutput = await norsk.output.cmafMaster({ id: "master", playlistName: "master", destinations });
   let audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings });
   let highOutput = await norsk.output.cmafVideo({ id: "high", destinations, ...segmentSettings });
@@ -18,16 +35,23 @@ export async function main(): Promise<void> {
   lowOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("low") }]);
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
 
-  let allVideoAndAudio = [
+  masterOutput.subscribe([
     { source: abrLadder, sourceSelector: selectAllVideos(ladderRungs.length) },
     { source: input, sourceSelector: selectAudio },
-  ];
-  masterOutput.subscribe(allVideoAndAudio);
+  ]);
 
   console.log(`Local player: ${masterOutput.playlistUrl}`);
 
-  let localRtcOutput = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
-  localRtcOutput.subscribe(allVideoAndAudio);
+  let localRtcOutput = await norsk.output.whep({ id: "webrtc" });
+  localRtcOutput.subscribe([
+    { source: abrLadder, sourceSelector: (streams: readonly StreamMetadata[]) =>
+      {
+        const video = videoStreamKeys(streams);
+        return video.filter((key) => key.renditionName === "high")
+      }
+    },
+    { source: input, sourceSelector: selectAudio },
+  ]);
 
   console.log(`Local player: ${localRtcOutput.playerUrl}`);
 
@@ -49,7 +73,7 @@ const ladderRungs: VideoEncodeRung[] = [
       bitrateMode: { value: 8000000, mode: "abr" },
       keyFrameIntervalMax: 50,
       keyFrameIntervalMin: 50,
-      bframes: 3,
+      bframes: 0,
       sceneCut: 0,
       profile: "high",
       level: 4.1,

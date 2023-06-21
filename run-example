@@ -5,6 +5,9 @@ cd "${0%/*}"
 declare LOG_ROOT
 declare LICENSE_FILE
 
+declare DOCKER_UID=${NORSK_UID:=$(id --user)}
+declare DOCKER_GID=${NORSK_GID:=$(id --group)}
+
 declare -r HOST_NAME=$(hostname 2>/dev/null || echo "127.0.0.1")
 
 declare -r CLIENT_HOST_DEFAULT=${HOST_NAME}
@@ -21,7 +24,7 @@ declare -r GRAFANA_URL=${GRAFANA_URL:-$GRAFANA_URL_DEFAULT}
 
 function usage() {
     # TODO :)
-    echo "Usage: run-example [options] [cmd]"
+    echo "Usage: run-example [options] cmd"
     echo "  Options:"
     echo "    --license-file <license-file> : where on the host to mount the Norsk license file."
     echo "    --log-root <log-dir> : where on the host to mount Norsk's logs.  The actual logs will be in a subdirectory with the name of the example you are running.  Default ./norskLogs"
@@ -30,18 +33,21 @@ if [[ "$OSTYPE" == "linux"* ]]; then
 fi
     echo "    --metrics [true|false] : whether metrics containers are included. Defaults to false"
     echo "    --run-source [true|false] : whether a source (or sources) are automatically started.  Defaults to true"
+    echo "    --uid <uid> : the UID to run the as.  Defaults to the current user's UID"
+    echo "    --gid <gid> : the GID to run the as.  Defaults to the current user's GID"
     echo "  Commands:"
     echo "    list : List the example names along with a short description of each"
     echo "    start <example-name> : start the named example."
     echo "        The example-name can be full (e.g. 00_hello_norsk), just the number (e.g. 00)"
     echo "        or just the name (e.g. hello_norsk)"
-    echo "    stop : Stops the last launched example with \`docker compose down\`"
-    echo "    stop-all : Stops all example containers and deletes the associated docker network (if any)"
+    echo "    stop : Stops all example containers and deletes the associated docker network (if any)"
     echo
     echo "  Environment variables:"
     echo "    LICENSE_FILE - the value of --license-file can alternatively be provided using this environment variable"
     echo "    PUBLIC_URL_PREFIX - adjust the prefix applied to displayed public URLs. default: $PUBLIC_URL_PREFIX_DEFAULT"
     echo "    DEBUG_URL_PREFIX - adjust the prefix applied to displayed debug URLs. default: $DEBUG_URL_PREFIX_DEFAULT"
+    echo "    NORSK_UID - the value of --uid can alternatively be provided using this environment variable"
+    echo "    NORSK_GID - the value of --gid can alternatively be provided using this environment variable"
     echo
     echo "For example:"
     echo "./run-example --license-file license.json start rtmp_to_hls"
@@ -75,18 +81,20 @@ function startExample() {
     local -r ymlPath=${2}
     local -r runSource=${3}
     local -r dockerComposeCmd=$(dockerComposeCmd)
+    local candidate
+
     if [ -z "$dockerComposeCmd" ]; then
         echo "Error: Unable to find docker-compose - exiting"
         exit 1
     fi
-    
+
     pushd "$ymlPath" >/dev/null
     case "$exampleName" in
         [0-9][0-9]) # User gave just the example number
             candidate=$(ls -1 "$1_"*".yml" 2>/dev/null || true | head -1)
         ;;
         [0-9][0-9]_*.yml) # Full match
-            candidate=$(ls -1 "$1" 2>/dev/null | head -1)
+            candidate=$(ls -1 "$1" 2>/dev/null || true | head -1)
         ;;
         [0-9][0-9]_*) # Full name of example (no extension)
             candidate=$(ls -1 "$1.yml" 2>/dev/null || true | head -1)
@@ -96,15 +104,15 @@ function startExample() {
         ;;
     esac
     popd >/dev/null
-    
+
     local -r dcFile="$ymlPath/$candidate"
     if [ ! -f "$dcFile" ]; then
         echo "Error: example not found $exampleName"
         exit 1
     fi
-    
-    mkdir -p "$LOG_ROOT/$exampleName"
-    
+
+    mkdir -p "$LOG_ROOT/$candidate"
+
     # Different versions of docker-compose treat paths inside yml files differently
     # (some consider paths relative to the yml file - other relative to where you run from)
     # As a result we copy the selected yml file to the current directory with the default
@@ -113,10 +121,12 @@ function startExample() {
     rm -f docker-compose.yml
     cat "$dcFile" \
     | sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
-          -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$exampleName")"'#g' \
+          -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$candidate")"'#g' \
           -e 's#${PUBLIC_URL_PREFIX}#'"$PUBLIC_URL_PREFIX"'#g' \
           -e 's#${DEBUG_URL_PREFIX}#'"$DEBUG_URL_PREFIX"'#g' \
           -e 's#${CLIENT_HOST}#'"$CLIENT_HOST"'#g' \
+          -e 's#${DOCKER_UID}#'"$DOCKER_UID"'#g' \
+          -e 's#${DOCKER_GID}#'"$DOCKER_GID"'#g' \
     | ( [[ "$runSource" == "false" ]] && awk 'BEGIN {flag=1}/.*\[Start of source\]/{flag=0; next} /.*\[End of source\]/{flag=1; next} flag' || cat ) \
     >docker-compose.yml
 
@@ -149,36 +159,35 @@ function startExample() {
 }
 
 function stopExample() {
-    local -r dockerComposeCmd=$(dockerComposeCmd || exit 1)
-    if [ -f docker-compose.yml ]; then
-        $dockerComposeCmd down -t 1
-    else
-        stopAll
-    fi
-}
+    local -a runningContainers
+    local -a activeNetworks
+    local i
+    local firstTime=true
+    readarray -t runningContainers < <(docker ps --all --format '{{.Names}}' | grep -e ^norsk- || runningContainers=() )
 
-function stopAll() {
-    local -r matchingContainersCmd='docker ps --all --filter name="^norsk-source" --filter name="^norsk-example" --filter name="norsk-server"'
-    local -r matchingNetworksCmd='docker network ls --filter name="^norsk-nw"'
-    echo "Stopping the following containers"
-    $matchingContainersCmd
-    if [[ "$OSTYPE" == "linux"* ]]; then
-        $matchingContainersCmd -q | xargs --no-run-if-empty docker rm -f
-    else
-        ($matchingContainersCmd -q | xargs docker rm -f 2>/dev/null) || true
-    fi
-    echo
-    echo "Deleting the following networks"
-    $matchingNetworksCmd
-    if [[ "$OSTYPE" == "linux"* ]]; then
-        $matchingNetworksCmd -q | xargs --no-run-if-empty docker network rm
-    else
-        ($matchingNetworksCmd -q | xargs docker network rm 2>/dev/null) || true
-    fi
+    for i in "${runningContainers[@]}" ; do
+        if [ $firstTime == true ]; then
+            echo "Stopping example containers:"
+            firstTime=false
+        fi
+        # The sed is just to indent the output
+        docker rm -f "$i" | sed 's/^/    /'
+    done
+
+    readarray -t activeNetworks < <(docker network list --format '{{.Name}}' | grep -e ^norsk-nw || activeNetworks=() )
+    firstTime=true
+    for i in "${activeNetworks[@]}" ; do
+        if [ $firstTime  == true ]; then
+            echo "Deleting network:"
+            firstTime=false
+        fi
+        # The sed is just to indent the output
+        docker network rm -f "$i" | sed 's/^/    /'
+    done
 }
 
 function downloadMediaAssets() {
-    MEDIA_ASSETS="Weaving.ts InkDrop.ts"
+    MEDIA_ASSETS="Weaving.ts Weaving-stereo.ts InkDrop.ts InkDrop-stereo.ts"
 
     for i in $MEDIA_ASSETS
     do
@@ -217,7 +226,7 @@ function main() {
                 export LICENSE_FILE="$2"
                 shift 2
             ;;
-            --log-root) 
+            --log-root)
                 # Remove trailing slash if present
                 export LOG_ROOT=${2%/}
                 shift 2
@@ -246,6 +255,14 @@ function main() {
                     *) echo "Unknown run-source flag $2"; usage ; exit 1 ;;
                 esac
             ;;
+            --uid)
+                DOCKER_UID="$2"
+                shift 2
+                ;;
+            --gid)
+                DOCKER_GID="$2"
+                shift 2
+                ;;
             --) shift ; positionalArguments+=("$@") ; break ;;
             -*) echo "Error: Unknown option $1" ; usage ; exit 1 ;;
             *) positionalArguments+=("$1") ; shift ;;
@@ -262,10 +279,6 @@ function main() {
                 stopExample
                 exit 0
             ;;
-            stop-all)
-                stopAll
-                exit 0
-            ;;
             *)
                 echo "Error: Unknown command $1"
                 usage
@@ -273,7 +286,7 @@ function main() {
             ;;
         esac
     fi
-    
+
     if [[ -z ${LICENSE_FILE+x} ]]; then
         usage
         exit 1
@@ -294,15 +307,19 @@ function main() {
                 echo "Stopping any current example"
                 echo
                 stopExample
-                echo "Starting $2"
                 echo
                 startExample "$2" "$ymlPath" "$runSource"
             ;;
             *)
                 echo "Error: Unknown command $1"
                 usage
+                exit 1
             ;;
         esac
+    else
+        echo "Error: No valid command specified"
+        usage
+        exit 1
     fi
 }
 

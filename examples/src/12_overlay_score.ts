@@ -1,14 +1,14 @@
 import {
-  Norsk,
-  ComposePart,
-  VideoComposeSettings,
   BrowserInputSettings,
+  ComposePart,
+  Norsk,
+  VideoComposeSettings,
+  VideoEncodeRung,
   clientHostExternal,
   clientHostInternal,
   selectVideo,
   selectAudio,
   videoToPin,
-  VideoEncodeRung,
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
 
@@ -82,7 +82,7 @@ export async function main() {
   });
   encode.subscribe([{ source: overlay, sourceSelector: selectVideo }]);
 
-  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
+  let output = await norsk.output.whep({ id: "webrtc" });
 
   output.subscribe([
     { source: encode, sourceSelector: selectVideo },

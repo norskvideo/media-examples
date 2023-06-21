@@ -1,4 +1,4 @@
-import { AudioSignalGeneratorSettings, CmafAudioOutputSettings, mkSine, Norsk, selectAudio } from "@norskvideo/norsk-sdk"
+import { AudioSignalGeneratorSettings, CmafAudioOutputSettings, Norsk, mkSine, selectAudio } from "@norskvideo/norsk-sdk";
 
 export async function main() {
   const norsk = await Norsk.connect();

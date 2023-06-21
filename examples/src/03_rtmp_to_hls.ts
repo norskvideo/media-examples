@@ -1,5 +1,5 @@
 import {
-  CMAFDestinationSettings,
+  CmafDestinationSettings,
   Norsk,
   selectAudio,
   selectAV,
@@ -10,7 +10,7 @@ export async function main() {
   const norsk = await Norsk.connect();
 
   let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
-  let destinations: CMAFDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+  let destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
 
   let audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings });
   let videoOutput = await norsk.output.cmafVideo({ id: "video", destinations, ...segmentSettings });

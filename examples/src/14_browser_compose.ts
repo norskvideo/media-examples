@@ -1,6 +1,6 @@
 import {
   BrowserInputSettings,
-  CMAFDestinationSettings,
+  CmafDestinationSettings,
   ComposePart,
   VideoComposeSettings,
   HlsPushDestinationSettings,
@@ -187,7 +187,7 @@ export async function main() {
     partDurationSeconds: 1.0,
     segmentDurationSeconds: 4.0,
   };
-  let destinations: CMAFDestinationSettings[] = [
+  let destinations: CmafDestinationSettings[] = [
     { type: "local", retentionPeriodSeconds: 10 },
   ];
 

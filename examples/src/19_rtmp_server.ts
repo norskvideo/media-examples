@@ -1,13 +1,14 @@
 import {
-  audioStreamKeys,
-  CMAFDestinationSettings,
+  CmafDestinationSettings,
   CmafMasterOutputNode,
   CmafMasterOutputSettings,
-  WebRTCBrowserNode,
   Norsk,
   RtmpServerInputNode,
   StreamMetadata,
+  WebRTCBrowserNode,
+  audioStreamKeys,
   videoStreamKeys,
+  WhepOutputNode,
 } from "@norskvideo/norsk-sdk";
 
 let allowedRenditions = {
@@ -99,7 +100,7 @@ let subscribeAudio = (
 
 type App = {
   master: CmafMasterOutputNode;
-  webrtc: WebRTCBrowserNode[];
+  webrtc: WhepOutputNode[];
   sources: string[];
 };
 let knownApps: { [x: string]: App } = {};
@@ -134,7 +135,7 @@ export async function main() {
 
       console.log("Got RTMP stream", app, url, streamId, publishingName);
       let onStream = async () => {
-        const destinations: CMAFDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+        const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
         // Register this app if we've not seen it before, and start up a master playlist for it
         if (!knownApps[app]) {
           let settings: CmafMasterOutputSettings = {
@@ -147,7 +148,7 @@ export async function main() {
           console.log(`Local player: ${masterPlaylist.playlistUrl}`);
         }
         // Create a single WebRTC output for this new stream
-        let webRtcOutput = await norsk.duplex.webRtcBrowser({
+        let webRtcOutput = await norsk.output.whep({
           id: "webrtc-" + app + "-" + publishingName,
         });
         webRtcOutput.subscribe([subscribeAV(input, app, publishingName)]);

@@ -1,18 +1,17 @@
-import { X264Codec } from "@norskvideo/norsk-api/lib/media_pb";
-import { AudioSignalGeneratorNode } from "@norskvideo/norsk-sdk";
-import { VideoEncodeRung } from "@norskvideo/norsk-sdk";
-import { OnStreamResult } from "@norskvideo/norsk-sdk";
-import { RtmpServerInputNode } from "@norskvideo/norsk-sdk";
 import {
+  AudioSignalGeneratorNode,
+  AudioSignalGeneratorSettings,
   Norsk,
-  videoStreamKeys,
-  VideoComposeNode,
+  OnStreamResult,
   PinToKey,
+  RtmpServerInputNode,
+  RtmpServerStreamKeys,
+  StreamMetadata,
+  VideoComposeNode,
+  VideoEncodeRung,
   audioStreamKeys,
   mkSine,
-  StreamMetadata,
-  AudioSignalGeneratorSettings,
-  RtmpServerStreamKeys,
+  videoStreamKeys,
 } from "@norskvideo/norsk-sdk";
 
 export async function main() {
@@ -132,10 +131,10 @@ class Mosaic {
           ]);
           console.log(
             "Media playlist",
-            "http://localhost:8080/localHls/file/stream/2-high/playlist.m3u8"
+            "http://localhost:8080/cmaf/file/stream/source1-1-2-high/playlist.m3u8"
           );
 
-          let rtcOutput = await this.norsk.duplex.webRtcBrowser({ id: "webrtc" });
+          let rtcOutput = await this.norsk.output.whep({ id: "webrtc" });
           rtcOutput.subscribe([
             { source: encode, sourceSelector: videoStreamKeys },
             { source: this.audioSignalInput, sourceSelector: audioStreamKeys },

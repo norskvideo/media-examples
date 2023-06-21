@@ -1,4 +1,4 @@
-import { Norsk, StreamMetadataMessage, selectAV } from "@norskvideo/norsk-sdk"
+import { Norsk, selectAV } from "@norskvideo/norsk-sdk"
 
 export async function main() {
   const norsk = await Norsk.connect({});

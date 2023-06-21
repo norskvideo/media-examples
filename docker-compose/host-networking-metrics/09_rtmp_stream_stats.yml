@@ -13,8 +13,9 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v1.0.334-main
+    image: norskvideo/norsk:v1.0.335-main
     network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro
       - ${LOG_ROOT}:/var/log/norsk
@@ -28,6 +29,7 @@ services:
       dockerfile: Dockerfile
       network: host # note this is for build only, not at runtime. Without it npm install can fail on some systems
     network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     environment:
       - PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX}
       - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
@@ -43,6 +45,7 @@ services:
     image: datarhei/ffmpeg
     network_mode: host
     entrypoint: ["/bin/sh","-c"]
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ./data:/tmp/data:ro
     command:
@@ -61,6 +64,7 @@ services:
         "--enable-feature=remote-write-receiver",
       ]
     network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ./docker-compose/metrics/host-network/prometheus.yaml:/etc/prometheus.yaml
       - norsk-metrics-data:/prometheus
@@ -70,6 +74,7 @@ services:
     image: grafana/loki:latest
     command: "-config.file=/etc/loki/config.yaml -target=all"
     network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ./docker-compose/metrics/loki-config.yaml:/etc/loki/config.yaml
     healthcheck:
@@ -86,6 +91,7 @@ services:
     container_name: norsk-grafana
     image: grafana/grafana:latest
     network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ./docker-compose/metrics/host-network/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./docker-compose/metrics/grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml

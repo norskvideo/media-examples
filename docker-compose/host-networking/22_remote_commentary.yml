@@ -1,6 +1,6 @@
-# Norsk Media example: 18_rtmp_server
+# Norsk Media example: 22_remote_commentary
 #
-# A more fully featured RTMP server showing use of callbacks for security etc
+# Provide a low latency view of a stream to a commentator over WebRTC and mix their commentary into that from the source. Publish in an HLS ladder
 #
 
 version: "3"
@@ -8,8 +8,9 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v1.0.334-main
+    image: norskvideo/norsk:v1.0.335-main
     network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro
       - ${LOG_ROOT}:/var/log/norsk
@@ -23,6 +24,7 @@ services:
       dockerfile: Dockerfile
       network: host # note this is for build only, not at runtime. Without it npm install can fail on some systems
     network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     environment:
       - PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX}
       - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
@@ -31,19 +33,20 @@ services:
     depends_on:
       norsk:
         condition: service_healthy
-    command: node -e 'require("./lib/src/18_rtmp_server").main()'
+    command: node -e 'require("./lib/src/22_remote_commentary").main()'
   # [Start of source]
   source:
     container_name: norsk-source
     image: datarhei/ffmpeg
     network_mode: host
     entrypoint: ["/bin/sh","-c"]
+    user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ./data:/tmp/data:ro
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts -vcodec copy -acodec copy -f flv 'rtmp://127.0.0.1:1935/norsk/high'
+        ffmpeg -v error -re -f lavfi -i "testsrc[out0];sine=frequency=220:sample_rate=48000[out1]" -vcodec h264 -b:v 150000 -b:a 20000 -aspect 1280:720 -x264opts "keyint=25:min-keyint=25:no-scenecut:bframes=0" -bluray-compat true -tune stillimage -preset fast -pix_fmt yuv420p -acodec aac -metadata language=en -f mpegts -flush_packets 0 'srt://127.0.0.1:5001?pkt_size=1316'
     depends_on:
       - example
   # [End of source]

@@ -1,4 +1,4 @@
-import { Norsk, StreamKeyOverrideSettings, FileTsOutputSettings, selectAudio, selectVideo } from "@norskvideo/norsk-sdk";
+import { FileTsOutputSettings, Norsk, StreamKeyOverrideSettings, selectAudio, selectVideo } from "@norskvideo/norsk-sdk";
 
 export async function main() {
     const norsk = await Norsk.connect();
@@ -6,7 +6,7 @@ export async function main() {
     let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
     let videoPidNormalizer = await norsk.processor.transform.streamKeyOverride(videoStreamKeyConfig);
     let audioPidNormalizer = await norsk.processor.transform.streamKeyOverride(audioStreamKeyConfig);
-    let output1 = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
+    let output1 = await norsk.output.whep({ id: "webrtc" });
     let output2 = await norsk.output.fileTs(tsFileOutputSettings);
 
     videoPidNormalizer.subscribe([{ source: input, sourceSelector: selectVideo }]);

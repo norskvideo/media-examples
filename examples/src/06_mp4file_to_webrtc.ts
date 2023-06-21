@@ -7,7 +7,7 @@ export async function main() {
   const norsk = await Norsk.connect();
 
   let input = await norsk.input.fileMp4({ id: "fileMp4", sourceName: "example.mp4", fileName: fileName });
-  let output = await norsk.duplex.webRtcBrowser({ id: "webrtc" });
+  let output = await norsk.output.whep({ id: "webrtc" });
 
   output.subscribe([{ source: input, sourceSelector: selectAV }]);
 
