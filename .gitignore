@@ -3,3 +3,7 @@ dc/norskLogs
 norskLogs
 docker-compose.yml
 .DS_Store
+data/InkDrop-stereo.ts
+data/InkDrop.ts
+data/Weaving-stereo.ts
+data/Weaving.ts
