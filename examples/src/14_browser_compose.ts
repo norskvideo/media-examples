@@ -116,7 +116,7 @@ export async function main() {
     overlay.sourceRect = config.sourceRect;
     overlay.destRect = config.destRect;
     compose.updateConfig({ parts });
-  }, 22000);
+  }, 5000);
 
   let videoStreamKeyConfig = {
     id: "video_stream_key",

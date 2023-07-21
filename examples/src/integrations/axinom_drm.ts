@@ -8,7 +8,6 @@ import {
 import { randomUUID } from "crypto";
 import { XMLParser } from "fast-xml-parser";
 import jwt from "jsonwebtoken";
-import fs from "fs/promises";
 
 export async function main() {
   // Client generates the key IDs for audio and video
@@ -17,12 +16,36 @@ export async function main() {
   let audioEncryptionKeyId = randomUUID();
   let videoEncryptionKeyId = randomUUID();
 
-  console.log("For testing Widevine playback with Shaka player, use the following configuration:")
+  console.log();
+  if (!process.env["AXINOM_TENANT_ID"] || !process.env["AXINOM_MGMT_KEY"] || (!process.env["AXINOM_COM_KEY_ID"] !== !process.env["AXINOM_COM_KEY"])) {
+    let envvar = (k: string) => "$" + k + " " + (process.env[k] ? "\u2713" : "\u2717");
+    console.error(
+      "Error: This example integration requires these environment variables to be set:\n ",
+      envvar("AXINOM_TENANT_ID")+"\n ",
+      "  Tenant ID from your Axinom DRM account\n ",
+      envvar("AXINOM_MGMT_KEY")+"\n ",
+      "  Management Key from your Axinom DRM account\n ",
+      envvar("AXINOM_COM_KEY_ID")+" (optional, for playback)\n ",
+      "  Communication Key ID from your Axinom DRM account\n ",
+      envvar("AXINOM_COM_KEY")+" (optional, for playback)\n ",
+      "  Communication Key from your Axinom DRM account",
+    );
+    return process.exit(1);
+  }
+  console.log("For testing Widevine/PlayReady playback with Shaka player, use the following configuration:");
   console.log("  https://shaka-player-demo.appspot.com/demo/");
+  console.log("    NOTE: Your browser will need to consider Norsk secure for Shaka player to be able to play it, so either allow insecure content/disable CORS in your web browser, or add a HTTPS reverse proxy in front of the Norsk endpoint given below");
+  console.log();
   console.log("DRM > Custom License Server URL:\n ", "https://drm-widevine-licensing.axprod.net/AcquireLicense");
+  console.log("    OR\n ", "https://drm-playready-licensing.axprod.net/AcquireLicense");
   console.log("HEADERS > Header Name:\n ", "X-AxDRM-Message");
   // For playback, the license server needs a JWT for the right key IDs
-  console.log("HEADERS > Header Value:\n ", mkToken([ audioEncryptionKeyId, videoEncryptionKeyId ]));
+  // (If you don't want to reconfigure this each time for testing,
+  // set audioEncryptionKeyId and videoEncryptionKeyId to static values)
+  console.log(
+    "HEADERS > Header Value (*Changes each run):\n ",
+    mkToken([ audioEncryptionKeyId, videoEncryptionKeyId ])
+  );
   console.log();
   console.log("EXTRA CONFIG:\n ", JSON.stringify({
     "streaming": {
@@ -50,9 +73,32 @@ export async function main() {
     videoEncryption,
   });
 
-  let audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, encryption: audioEncryption, ...segmentSettings });
-  let videoOutput = await norsk.output.cmafVideo({ id: "video", destinations, encryption: videoEncryption, ...segmentSettings });
-  let masterOutput = await norsk.output.cmafMaster({ id: "master", playlistName: "master", destinations });
+  let audioOutput = await norsk.output.cmafAudio({
+    id: "audio",
+    destinations,
+    encryption: audioEncryption,
+    ...segmentSettings,
+    m3uAdditions: audioEncryption.mediaSignaling,
+    mpdAdditions: audioEncryption.contentProtection,
+  });
+  let videoOutput = await norsk.output.cmafVideo({
+    id: "video",
+    destinations,
+    encryption: videoEncryption,
+    ...segmentSettings,
+    m3uAdditions: videoEncryption.mediaSignaling,
+    mpdAdditions: videoEncryption.contentProtection,
+  });
+  let masterOutput = await norsk.output.cmafMaster({
+    id: "master",
+    playlistName: "master",
+    destinations,
+    m3uAdditions: [
+      audioEncryption.masterSignaling,
+      videoEncryption.masterSignaling,
+    ].join("\n"),
+    mpdAdditions: "",
+  });
 
   fileOutput.subscribe([{ source: input, sourceSelector: selectAV }]);
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
@@ -60,6 +106,7 @@ export async function main() {
   masterOutput.subscribe([{ source: input, sourceSelector: selectAV }]);
 
   console.log("MAIN > Manifest URL:\n ", masterOutput.playlistUrl);
+  console.log();
   audioOutput.url().then(logMediaPlaylist("audio"));
   videoOutput.url().then(logMediaPlaylist("video"));
 }
@@ -70,6 +117,7 @@ type KeyResponse = {
   encryptionPssh: string,
   mediaSignaling: string,
   masterSignaling: string,
+  contentProtection: string,
 };
 type Multi<T> = {
   audio: T,
@@ -178,6 +226,10 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
     // And signaling data for playlists
     let mediaSignalings: string[] = [];
     let masterSignalings: string[] = [];
+    let contentProtection: string = `
+      <ContentProtection xmlns:cenc="urn:mpeg:cenc:2013" cenc:default_KID="${encryptionKeyId}"
+        schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" />
+    `;
 
     let DRMSystems = XMLList(cpix["cpix:DRMSystemList"]["cpix:DRMSystem"]);
     for (let DRMSystem of DRMSystems) {
@@ -194,13 +246,24 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
         }
         return "";
       }
+
+      let systemId = DRMSystem["@_systemId"];
+      if (typeof systemId === "string") {
+        let contentProtectionData = XMLText(DRMSystem["cpix:ContentProtectionData"]);
+        contentProtection += `
+          <ContentProtection xmlns:cenc="urn:mpeg:cenc:2013" cenc:default_KID="${encryptionKeyId}"
+            schemeIdUri="urn:uuid:${systemId}">
+            ${un64(contentProtectionData)}
+          </ContentProtection>
+        `;
+      }
     }
 
     // The data from each system gets concatenated together
     let encryptionPssh = cat64(encryptionPsshs);
     // with newline separators for the signaling
-    let mediaSignaling = cat64(mediaSignalings, "\n");
-    let masterSignaling = cat64(masterSignalings, "\n");
+    let mediaSignaling = mediaSignalings.map(un64).join("\n");
+    let masterSignaling = masterSignalings.map(un64).join("\n");
 
     result[key] = {
       encryptionKey,
@@ -208,6 +271,7 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
       encryptionPssh,
       mediaSignaling,
       masterSignaling,
+      contentProtection,
     };
   }
 
@@ -223,6 +287,7 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
     return [nodes];
   }
   function XMLText(node: any): string {
+    if (node === undefined || node === null) return "";
     if (typeof node === "string") return node;
     if (typeof node["#text"] === "string") return node["#text"];
     return "";
@@ -236,9 +301,15 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
     }
     return Buffer.concat(buffers).toString("base64");
   }
+  function un64(encoded: string) {
+    return Buffer.from(encoded, "base64").toString("utf-8");
+  }
 }
 
 export function mkToken(keys: string[]) {
+  if (!process.env["AXINOM_COM_KEY_ID"] && !process.env["AXINOM_COM_KEY"]) {
+    return "[Need $AXINOM_COM_KEY_ID and $AXINOM_COM_KEY]";
+  }
   // Generates an example token for client playback
   // See Axinom documentation for fields
   let msg = {

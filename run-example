@@ -13,13 +13,13 @@ declare -r HOST_NAME=$(hostname 2>/dev/null || echo "127.0.0.1")
 declare -r CLIENT_HOST_DEFAULT=${HOST_NAME}
 declare -r CLIENT_HOST=${CLIENT_HOST:-$CLIENT_HOST_DEFAULT}
 
-declare -r PUBLIC_URL_PREFIX_DEFAULT="http://${HOST_NAME}:8080"
+declare -r PUBLIC_URL_PREFIX_DEFAULT="http://${CLIENT_HOST}:8080"
 declare    PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-$PUBLIC_URL_PREFIX_DEFAULT}
 
-declare -r DEBUG_URL_PREFIX_DEFAULT="http://${HOST_NAME}:6791"
+declare -r DEBUG_URL_PREFIX_DEFAULT="http://${CLIENT_HOST}:6791"
 declare -r DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX:-$DEBUG_URL_PREFIX_DEFAULT}
 
-declare -r GRAFANA_URL_DEFAULT="http://${HOST_NAME}:3100"
+declare -r GRAFANA_URL_DEFAULT="http://${CLIENT_HOST}:3100"
 declare -r GRAFANA_URL=${GRAFANA_URL:-$GRAFANA_URL_DEFAULT}
 
 function usage() {
@@ -44,6 +44,7 @@ fi
     echo
     echo "  Environment variables:"
     echo "    LICENSE_FILE - the value of --license-file can alternatively be provided using this environment variable"
+    echo "    CLIENT_HOST - adjust the hostname/IP used for public access to Norsk. default: $CLIENT_HOST_DEFAULT"  
     echo "    PUBLIC_URL_PREFIX - adjust the prefix applied to displayed public URLs. default: $PUBLIC_URL_PREFIX_DEFAULT"
     echo "    DEBUG_URL_PREFIX - adjust the prefix applied to displayed debug URLs. default: $DEBUG_URL_PREFIX_DEFAULT"
     echo "    NORSK_UID - the value of --uid can alternatively be provided using this environment variable"
@@ -182,17 +183,17 @@ function stopExample() {
             firstTime=false
         fi
         # The sed is just to indent the output
-        docker network rm -f "$i" | sed 's/^/    /'
+        docker network rm "$i" | sed 's/^/    /'
     done
 }
 
 function downloadMediaAssets() {
-    MEDIA_ASSETS="Weaving.ts Weaving-stereo.ts InkDrop.ts InkDrop-stereo.ts"
+    MEDIA_ASSETS="Weaving.ts Weaving-stereo.ts InkDrop.ts InkDrop-stereo.ts TraditionalMusic.mp4"
 
     for i in $MEDIA_ASSETS
     do
         if [[ ! -f data/$i ]]; then
-	        wget -O data/$i https://s3.eu-west-1.amazonaws.com/norsk.video/media-examples/data/$i
+	        curl -q "https://s3.eu-west-1.amazonaws.com/norsk.video/media-examples/data/$i" > "data/$i"
         fi
     done
 }
@@ -201,6 +202,7 @@ function main() {
     local ymlPath
     local dockerComposeCmd
     local addMetrics=false
+    local addTurn=false
     local runSource=true
 
     declare -a positionalArguments
@@ -211,6 +213,7 @@ function main() {
         ymlPath="docker-compose/host-networking"
     else
         ymlPath="docker-compose/docker-networking"
+        addTurn=true
     fi
     LOG_ROOT="norskLogs"
 
@@ -246,6 +249,13 @@ function main() {
                     true) addMetrics=true ; shift 2 ;;
                     false) addMetrics=false ; shift 2 ;;
                     *) echo "Unknown metrics flag $2"; usage ; exit 1 ;;
+                esac
+            ;;
+            --turn)
+                case "$2" in
+                    true) addTurn=true ; shift 2 ;;
+                    false) addTurn=false ; shift 2 ;;
+                    *) echo "Unknown turn flag $2"; usage ; exit 1 ;;
                 esac
             ;;
             --run-source)
@@ -298,6 +308,10 @@ function main() {
 
     if [[ "$addMetrics" == "true" ]]; then
         ymlPath="$ymlPath"-metrics
+    fi
+
+    if [[ "$addTurn" == "true" ]]; then
+        ymlPath="$ymlPath"-turn
     fi
 
     if [[ $# -eq 2 ]]; then

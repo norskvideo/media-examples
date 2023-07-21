@@ -10,7 +10,6 @@ import {
   selectVideo,
   videoToPin,
 } from "@norskvideo/norsk-sdk";
-import fs from "fs/promises";
 
 export async function main() {
   const srtSettings: SrtInputSettings = {
@@ -63,9 +62,8 @@ export async function main() {
     onError: () => process.exit(), // interval keeps this script alive after nodes close
   };
 
-  const fileName = await fs.realpath("./data/Norsk.png");
   const fileSettings: LocalFileInputSettings = {
-    fileName,
+    fileName: "/mnt/data/Norsk.png",
     sourceName: "logoInput",
     id: "logoInput"
   };

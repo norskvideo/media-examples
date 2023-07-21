@@ -9,6 +9,7 @@ import {
   audioStreamKeys,
   videoStreamKeys,
   WhepOutputNode,
+  WhepOutputSettings,
 } from "@norskvideo/norsk-sdk";
 
 let allowedRenditions = {
@@ -150,6 +151,7 @@ export async function main() {
         // Create a single WebRTC output for this new stream
         let webRtcOutput = await norsk.output.whep({
           id: "webrtc-" + app + "-" + publishingName,
+          ...iceServerConfig()
         });
         webRtcOutput.subscribe([subscribeAV(input, app, publishingName)]);
         knownApps[app].webrtc.push(webRtcOutput);
@@ -201,4 +203,14 @@ export async function main() {
       };
     },
   });
+}
+function iceServerConfig(): WhepOutputSettings {
+  return (process.env.TURN_INTERNAL && process.env.TURN_EXTERNAL) ?
+    // Separate hostnames for server and client access to the turn server as in some cases they cannot resolve the same IP
+    {
+      iceServers: [{ urls: [`turn:${process.env.TURN_INTERNAL}:3478`], username: "norsk", credential: "norsk" }],
+      reportedIceServers: [{ urls: [`turn:${process.env.TURN_EXTERNAL}:3478`], username: "norsk", credential: "norsk" }]
+    }
+    :
+    { iceServers: [] };
 }

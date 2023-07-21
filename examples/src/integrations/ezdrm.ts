@@ -7,12 +7,28 @@ import {
 } from "@norskvideo/norsk-sdk";
 import { randomUUID } from "crypto";
 import { XMLParser } from "fast-xml-parser";
-import fs from "fs/promises";
 
 export async function main() {
-  console.log("For testing Widevine playback with Shaka player, use the following configuration:")
+  console.log();
+  if (!process.env["EZDRM_TOKEN"] && (!process.env["EZDRM_USERNAME"] || !process.env["EZDRM_PASSWORD"])) {
+    let envvar = (k: string) => "$" + k + " " + (process.env[k] ? "\u2713" : "\u2717");
+    console.error(
+      "Error: This example integration requires these environment variables to be set:\n ",
+      `${envvar("EZDRM_TOKEN")}, or ${envvar("EZDRM_USERNAME")} and ${envvar("EZDRM_PASSWORD")}\n `,
+      "  From your EZDRM account (see EZDRM's documentation on methods for authentication)\n ",
+      `${envvar("EZDRM_WV_PX")} (optional, for playback)\n `,
+      "  The last six digits of your Widevine Profile ID\n ",
+      `${envvar("EZDRM_PR_PX")} (optional, for playback)\n `,
+      "  The last six digits of your PlayReady Profile ID"
+    );
+    return process.exit(1);
+  }
+  console.log("For testing Widevine/PlayReady playback with Shaka player, use the following configuration:");
   console.log("  https://shaka-player-demo.appspot.com/demo/");
+  console.log("    NOTE: Your browser will need to consider Norsk secure for Shaka player to be able to play it, so either allow insecure content/disable CORS in your web browser, or add a HTTPS reverse proxy in front of the Norsk endpoint given below");
+  console.log();
   console.log("DRM > Custom License Server URL:\n ", "https://widevine-dash.ezdrm.com/widevine-php/widevine-foreignkey.php?pX="+(process.env["EZDRM_WV_PX"] || "$EZDRM_WV_PX"));
+  console.log("    OR\n ", "https://playready.ezdrm.com/cency/preauth.aspx?pX="+(process.env["EZDRM_PR_PX"] || "$EZDRM_PR_PX"));
   console.log("EXTRA CONFIG:\n ", JSON.stringify({
     "streaming": {
       "lowLatencyMode": true,
@@ -42,9 +58,32 @@ export async function main() {
     videoEncryption,
   });
 
-  let audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, encryption: audioEncryption, ...segmentSettings });
-  let videoOutput = await norsk.output.cmafVideo({ id: "video", destinations, encryption: videoEncryption, ...segmentSettings });
-  let masterOutput = await norsk.output.cmafMaster({ id: "master", playlistName: "master", destinations });
+  let audioOutput = await norsk.output.cmafAudio({
+    id: "audio",
+    destinations,
+    encryption: audioEncryption,
+    ...segmentSettings,
+    m3uAdditions: audioEncryption.mediaSignaling,
+    mpdAdditions: audioEncryption.contentProtection,
+  });
+  let videoOutput = await norsk.output.cmafVideo({
+    id: "video",
+    destinations,
+    encryption: videoEncryption,
+    ...segmentSettings,
+    m3uAdditions: videoEncryption.mediaSignaling,
+    mpdAdditions: videoEncryption.contentProtection,
+  });
+  let masterOutput = await norsk.output.cmafMaster({
+    id: "master",
+    playlistName: "master",
+    destinations,
+    m3uAdditions: [
+      audioEncryption.masterSignaling,
+      videoEncryption.masterSignaling,
+    ].join("\n"),
+    mpdAdditions: "",
+  });
 
   fileOutput.subscribe([{ source: input, sourceSelector: selectAV }]);
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
@@ -52,6 +91,7 @@ export async function main() {
   masterOutput.subscribe([{ source: input, sourceSelector: selectAV }]);
 
   console.log("MAIN > Manifest URL:\n ", masterOutput.playlistUrl);
+  console.log();
   audioOutput.url().then(logMediaPlaylist("audio"));
   videoOutput.url().then(logMediaPlaylist("video"));
 }
@@ -62,6 +102,7 @@ type KeyResponse = {
   encryptionPssh: string,
   mediaSignaling: string,
   masterSignaling: string,
+  contentProtection: string,
 };
 type Multi<T> = {
   audio: T,
@@ -83,8 +124,9 @@ export async function obtainKey(encryptionKeyIds: Multi<string>): Promise<Multi<
     ...auth,
   }).toString();
   let endpoint = "https://cpix.ezdrm.com/KeyGenerator/cpix2.aspx";
-  console.log(endpoint+"?"+params);
-  let response_inflight = await fetch(endpoint+"?"+params);
+  let url = endpoint+"?"+params;
+  //console.log(url);
+  let response_inflight = await fetch(url);
   if (!response_inflight.ok) {
     throw new Error(response_inflight.status + " " + response_inflight.statusText);
   }
@@ -117,6 +159,10 @@ export async function obtainKey(encryptionKeyIds: Multi<string>): Promise<Multi<
     // And signaling data for playlists
     let mediaSignalings: string[] = [];
     let masterSignalings: string[] = [];
+    let contentProtection: string = `
+      <ContentProtection xmlns:cenc="urn:mpeg:cenc:2013" cenc:default_KID="${encryptionKeyId}"
+        schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" />
+    `;
 
     let DRMSystems = XMLList(cpix["cpix:DRMSystemList"]["cpix:DRMSystem"]);
     for (let DRMSystem of DRMSystems) {
@@ -133,13 +179,24 @@ export async function obtainKey(encryptionKeyIds: Multi<string>): Promise<Multi<
         }
         return "";
       }
+
+      let systemId = DRMSystem["@_systemId"];
+      if (typeof systemId === "string") {
+        let contentProtectionData = XMLText(DRMSystem["cpix:ContentProtectionData"]);
+        contentProtection += `
+          <ContentProtection xmlns:cenc="urn:mpeg:cenc:2013" cenc:default_KID="${encryptionKeyId}"
+            schemeIdUri="urn:uuid:${systemId}">
+            ${un64(contentProtectionData)}
+          </ContentProtection>
+        `;
+      }
     }
 
     // The data from each system gets concatenated together
     let encryptionPssh = cat64(encryptionPsshs);
     // with newline separators for the signaling
-    let mediaSignaling = cat64(mediaSignalings, "\n");
-    let masterSignaling = cat64(masterSignalings, "\n");
+    let mediaSignaling = mediaSignalings.map(un64).join("\n");
+    let masterSignaling = masterSignalings.map(un64).join("\n");
 
     result[key] = {
       encryptionKey,
@@ -147,6 +204,7 @@ export async function obtainKey(encryptionKeyIds: Multi<string>): Promise<Multi<
       encryptionPssh,
       mediaSignaling,
       masterSignaling,
+      contentProtection,
     };
   }
 
@@ -162,6 +220,7 @@ export async function obtainKey(encryptionKeyIds: Multi<string>): Promise<Multi<
     return [nodes];
   }
   function XMLText(node: any): string {
+    if (node === undefined || node === null) return "";
     if (typeof node === "string") return node;
     if (typeof node["#text"] === "string") return node["#text"];
     return "";
@@ -174,6 +233,9 @@ export async function obtainKey(encryptionKeyIds: Multi<string>): Promise<Multi<
       buffers = Array.prototype.concat(...buffers.map(b => [sepb, b])).slice(1);
     }
     return Buffer.concat(buffers).toString("base64");
+  }
+  function un64(encoded: string) {
+    return Buffer.from(encoded, "base64").toString("utf-8");
   }
 }
 

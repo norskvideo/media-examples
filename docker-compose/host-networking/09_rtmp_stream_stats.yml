@@ -13,11 +13,12 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v1.0.335-main
+    image: norskvideo/norsk:v1.0.336-main
     network_mode: host
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro
+      - ./data:/mnt/data
       - ${LOG_ROOT}:/var/log/norsk
     command: --license-file /mnt/license.json 
     shm_size: '2gb'
@@ -35,6 +36,7 @@ services:
       - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
       - CLIENT_HOST_EXTERNAL=${CLIENT_HOST}
       - CLIENT_HOST_INTERNAL=127.0.0.1
+      
     depends_on:
       norsk:
         condition: service_healthy

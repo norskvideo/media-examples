@@ -1,16 +1,16 @@
 import {
-  Norsk,
-  videoStreamKeys,
-  StreamMetadata,
-  SrtInputSettings,
-  VideoEncodeRung,
-  selectVideo,
-  selectAudio,
   AudioMixSettings,
+  CmafDestinationSettings,
+  Norsk,
+  SrtInputSettings,
+  StreamMetadata,
+  VideoEncodeRung,
+  WebRTCBrowserSettings,
   audioToPin,
   selectAllVideos,
-  CmafDestinationSettings,
-  audioStreamKeys,
+  selectAudio,
+  selectVideo,
+  videoStreamKeys
 } from "@norskvideo/norsk-sdk";
 
 export async function main() {
@@ -63,6 +63,7 @@ export async function main() {
   // And outputting media from the connected browser
   let previewRtc = await norsk.duplex.webRtcBrowser({
     id: "previewRtc",
+    ...iceServerConfig()
   });
   previewRtc.subscribe([
     { source: previewEncode, sourceSelector: selectVideo },
@@ -186,4 +187,14 @@ export async function main() {
   ]);
 
   console.log(`Local player: ${masterOutput.playlistUrl}`);
+}
+function iceServerConfig(): WebRTCBrowserSettings {
+  return (process.env.TURN_INTERNAL && process.env.TURN_EXTERNAL) ?
+    // Separate hostnames for server and client access to the turn server as in some cases they cannot resolve the same IP
+    {
+      iceServers: [{ urls: [`turn:${process.env.TURN_INTERNAL}:3478`], username: "norsk", credential: "norsk" }],
+      reportedIceServers: [{ urls: [`turn:${process.env.TURN_EXTERNAL}:3478`], username: "norsk", credential: "norsk" }]
+    }
+    :
+    { iceServers: [] };
 }
