@@ -44,7 +44,7 @@ fi
     echo
     echo "  Environment variables:"
     echo "    LICENSE_FILE - the value of --license-file can alternatively be provided using this environment variable"
-    echo "    CLIENT_HOST - adjust the hostname/IP used for public access to Norsk. default: $CLIENT_HOST_DEFAULT"  
+    echo "    CLIENT_HOST - adjust the hostname/IP used for public access to Norsk. default: 'hostname' ($CLIENT_HOST_DEFAULT)"  
     echo "    PUBLIC_URL_PREFIX - adjust the prefix applied to displayed public URLs. default: $PUBLIC_URL_PREFIX_DEFAULT"
     echo "    DEBUG_URL_PREFIX - adjust the prefix applied to displayed debug URLs. default: $DEBUG_URL_PREFIX_DEFAULT"
     echo "    NORSK_UID - the value of --uid can alternatively be provided using this environment variable"
@@ -160,13 +160,9 @@ function startExample() {
 }
 
 function stopExample() {
-    local -a runningContainers
-    local -a activeNetworks
     local i
     local firstTime=true
-    readarray -t runningContainers < <(docker ps --all --format '{{.Names}}' | grep -e ^norsk- || runningContainers=() )
-
-    for i in "${runningContainers[@]}" ; do
+    for i in $(docker ps --all --format '{{.Names}}' | grep -e ^norsk-) ; do
         if [ $firstTime == true ]; then
             echo "Stopping example containers:"
             firstTime=false
@@ -175,9 +171,8 @@ function stopExample() {
         docker rm -f "$i" | sed 's/^/    /'
     done
 
-    readarray -t activeNetworks < <(docker network list --format '{{.Name}}' | grep -e ^norsk-nw || activeNetworks=() )
     firstTime=true
-    for i in "${activeNetworks[@]}" ; do
+    for i in $(docker network list --format '{{.Name}}' | grep -e ^norsk-nw) ; do
         if [ $firstTime  == true ]; then
             echo "Deleting network:"
             firstTime=false

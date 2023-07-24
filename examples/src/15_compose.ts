@@ -45,7 +45,7 @@ export async function main() {
     opacity: 1.0,
     zIndex: 2,
     sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-    destRect: { x: 5, y: 5, width: 10, height: 8 },
+    destRect: { x: 5, y: 5, width: 10, height: 14 },
   };
 
   const parts = [background, embedded, logo];

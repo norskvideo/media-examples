@@ -1,6 +1,6 @@
-# Norsk Media example: 21_audio_mixer
+# Norsk Media example: 21_remote_commentary
 #
-# Generate an audio tone and publish it in an audio-only HLS playlist
+# Provide a low latency view of a stream to a commentator over WebRTC and mix their commentary into that from the source. Publish in an HLS ladder
 #
 
 version: "3.5"
@@ -46,17 +46,16 @@ services:
       - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
       - CLIENT_HOST_EXTERNAL=${CLIENT_HOST}
       - CLIENT_HOST_INTERNAL=norsk-example-app
-      - TURN_EXTERNAL=${CLIENT_HOST}
-      - TURN_INTERNAL=turn
+      
     depends_on:
       norsk:
         condition: service_healthy
-    command: node -e 'require("./lib/src/21_audio_mixer").main()'
+    command: node -e 'require("./lib/src/21_remote_commentary").main()'
     networks:
       - norskNetwork
   # [Start of source]
-  source_0:
-    container_name: norsk-source_0
+  source:
+    container_name: norsk-source
     image: datarhei/ffmpeg
     entrypoint: ["/bin/sh","-c"]
     user: "${DOCKER_UID}:${DOCKER_GID}"
@@ -65,77 +64,12 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/Weaving-stereo.ts -vcodec copy -acodec copy -f flv 'rtmp://norsk:5001/norsk/source1'
+        ffmpeg -v error -re -stream_loop -1 -i data/Weaving-stereo.ts -vcodec copy -acodec copy -f mpegts -flush_packets 0 'srt://norsk:5001?pkt_size=1316'
     depends_on:
       - example
     networks:
       - norskNetwork
   # [End of source]
-  # [Start of source]
-  source_1:
-    container_name: norsk-source_1
-    image: datarhei/ffmpeg
-    entrypoint: ["/bin/sh","-c"]
-    user: "${DOCKER_UID}:${DOCKER_GID}"
-    volumes:
-      - ./data:/tmp/data:ro
-    command:
-    - |
-        sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/Weaving-stereo.ts -vcodec copy -acodec copy -f flv 'rtmp://norsk:5002/norsk/source2'
-    depends_on:
-      - example
-    networks:
-      - norskNetwork
-  # [End of source]
-  # [Start of source]
-  source_2:
-    container_name: norsk-source_2
-    image: datarhei/ffmpeg
-    entrypoint: ["/bin/sh","-c"]
-    user: "${DOCKER_UID}:${DOCKER_GID}"
-    volumes:
-      - ./data:/tmp/data:ro
-    command:
-    - |
-        sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop-stereo.ts -vcodec copy -acodec copy -f flv 'rtmp://norsk:5003/norsk/source3'
-    depends_on:
-      - example
-    networks:
-      - norskNetwork
-  # [End of source]
-  # [Start of source]
-  source_3:
-    container_name: norsk-source_3
-    image: datarhei/ffmpeg
-    entrypoint: ["/bin/sh","-c"]
-    user: "${DOCKER_UID}:${DOCKER_GID}"
-    volumes:
-      - ./data:/tmp/data:ro
-    command:
-    - |
-        sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop-stereo.ts -vcodec copy -acodec copy -f flv 'rtmp://norsk:5004/norsk/source4'
-    depends_on:
-      - example
-    networks:
-      - norskNetwork
-  # [End of source]
-  turn:
-    container_name: norsk-turn
-    image: coturn/coturn
-    user: "${DOCKER_UID}:${DOCKER_GID}"
-    volumes:
-      - ./data/turnserver.conf:/etc/coturn/turnserver.conf:ro
-    ports:
-      - 3478:3478/udp # STUN/TURN
-      - 3478:3478/tcp # TURN tcp transport
-      - 5349:5349/tcp # tls
-      - 5349:5349/udp # tls
-      - 49160-49200:49160-49200  # UDP relay
-    networks:
-      - norskNetwork
   prometheus:
     container_name: norsk-prometheus
     image: prom/prometheus:latest
