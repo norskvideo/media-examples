@@ -44,9 +44,9 @@ fi
     echo
     echo "  Environment variables:"
     echo "    LICENSE_FILE - the value of --license-file can alternatively be provided using this environment variable"
-    echo "    CLIENT_HOST - adjust the hostname/IP used for public access to Norsk. default: 'hostname' ($CLIENT_HOST_DEFAULT)"  
-    echo "    PUBLIC_URL_PREFIX - adjust the prefix applied to displayed public URLs. default: $PUBLIC_URL_PREFIX_DEFAULT"
-    echo "    DEBUG_URL_PREFIX - adjust the prefix applied to displayed debug URLs. default: $DEBUG_URL_PREFIX_DEFAULT"
+    echo "    CLIENT_HOST - adjust the hostname/IP used for public access to this Norsk application. default: 'hostname' ($CLIENT_HOST_DEFAULT)"
+    echo "    PUBLIC_URL_PREFIX - adjust the prefix applied to displayed public URLs (playlists etc). default: $PUBLIC_URL_PREFIX_DEFAULT"
+    echo "    DEBUG_URL_PREFIX - adjust the prefix applied to displayed debug URLs (visualiser etc). default: $DEBUG_URL_PREFIX_DEFAULT"
     echo "    NORSK_UID - the value of --uid can alternatively be provided using this environment variable"
     echo "    NORSK_GID - the value of --gid can alternatively be provided using this environment variable"
     echo
@@ -113,6 +113,7 @@ function startExample() {
     fi
 
     mkdir -p "$LOG_ROOT/$candidate"
+    mkdir -p "$OUTPUT_ROOT/$candidate"
 
     # Different versions of docker-compose treat paths inside yml files differently
     # (some consider paths relative to the yml file - other relative to where you run from)
@@ -123,6 +124,7 @@ function startExample() {
     cat "$dcFile" \
     | sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
           -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$candidate")"'#g' \
+          -e 's#${OUTPUT_ROOT}#'"$(realpath "$OUTPUT_ROOT/$candidate")"'#g' \
           -e 's#${PUBLIC_URL_PREFIX}#'"$PUBLIC_URL_PREFIX"'#g' \
           -e 's#${DEBUG_URL_PREFIX}#'"$DEBUG_URL_PREFIX"'#g' \
           -e 's#${CLIENT_HOST}#'"$CLIENT_HOST"'#g' \
@@ -211,6 +213,7 @@ function main() {
         addTurn=true
     fi
     LOG_ROOT="norskLogs"
+    OUTPUT_ROOT="norskOutput"
 
     if [ "$(id -u)" == "0" ]; then
         echo "Error: running as root is not supported. Please run as a non-root user."

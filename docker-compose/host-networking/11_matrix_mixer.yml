@@ -8,12 +8,13 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v1.0.336-main
+    image: norskvideo/norsk:v1.0.337-main
     network_mode: host
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
       - ${LICENSE_FILE}:/mnt/license.json:ro
       - ./data:/mnt/data
+      - ${OUTPUT_ROOT}:/mnt/output
       - ${LOG_ROOT}:/var/log/norsk
     command: --license-file /mnt/license.json 
     shm_size: '2gb'

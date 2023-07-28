@@ -39,5 +39,5 @@ const audioStreamKeyConfig: StreamKeyOverrideSettings = {
 };
 const tsFileOutputSettings: FileTsOutputSettings = {
     id: "localTsOutput",
-    fileName: "/tmp/normalized.ts",
+    fileName: "/mnt/output/normalized.ts",
 };

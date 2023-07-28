@@ -1,13 +1,13 @@
 import {
   CmafDestinationSettings,
-  Norsk, 
+  Norsk,
   RtmpServerInputNode,
-  SrtInputNode, 
-  StreamMetadata, 
-  VideoEncodeRung, 
+  SrtInputNode,
+  StreamMetadata,
+  VideoEncodeRung,
   selectAllVideos,
   selectAudio,
-  selectVideo, 
+  selectVideo,
   videoStreamKeys,
 } from "@norskvideo/norsk-sdk";
 

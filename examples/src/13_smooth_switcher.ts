@@ -9,6 +9,7 @@ import {
   selectVideo,
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
+
 const express = require("express");
 
 export async function main() {

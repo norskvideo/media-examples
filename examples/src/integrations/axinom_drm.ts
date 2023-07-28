@@ -68,7 +68,7 @@ export async function main() {
 
   let fileOutput = await norsk.output.fileMp4({
     id: "file",
-    fragmentedFileName: "/tmp/encrypted.mp4",
+    fragmentedFileName: "/mnt/output/encrypted.mp4",
     audioEncryption,
     videoEncryption,
   });
