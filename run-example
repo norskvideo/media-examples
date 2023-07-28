@@ -5,8 +5,8 @@ cd "${0%/*}"
 declare LOG_ROOT
 declare LICENSE_FILE
 
-declare DOCKER_UID=${NORSK_UID:=$(id --user)}
-declare DOCKER_GID=${NORSK_GID:=$(id --group)}
+declare DOCKER_UID=${NORSK_UID:=$(id -u)}
+declare DOCKER_GID=${NORSK_GID:=$(id -g)}
 
 declare -r HOST_NAME=$(hostname 2>/dev/null || echo "127.0.0.1")
 
