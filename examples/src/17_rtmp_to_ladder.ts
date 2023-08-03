@@ -10,11 +10,12 @@ import {
   selectVideo,
   videoStreamKeys,
 } from "@norskvideo/norsk-sdk";
+import { webRtcServerConfig } from "./common/webRtcServerConfig";
 
 export async function main(): Promise<void> {
   const norsk = await Norsk.connect();
-  let rtmpInput = { id: "rtmp" };
-  let input = await norsk.input.rtmpServer(rtmpInput);
+  const rtmpInput = { id: "rtmp" };
+  const input = await norsk.input.rtmpServer(rtmpInput);
 
   // We call input_to_ladder() rather than have the code inline, simply to highlight the common code between this
   // and srt_to_ladder.  Just the input changes - nothing else.
@@ -22,13 +23,13 @@ export async function main(): Promise<void> {
 }
 
 export async function input_to_ladder(norsk: Norsk, input: RtmpServerInputNode | SrtInputNode): Promise<void> {
-  let abrLadder = await norsk.processor.transform.videoEncode({ id: "ladder", rungs: ladderRungs });
-  let destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 60 }]
-  let masterOutput = await norsk.output.cmafMaster({ id: "master", playlistName: "master", destinations });
-  let audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings });
-  let highOutput = await norsk.output.cmafVideo({ id: "high", destinations, ...segmentSettings });
-  let mediumOutput = await norsk.output.cmafVideo({ id: "medium", destinations, ...segmentSettings });
-  let lowOutput = await norsk.output.cmafVideo({ id: "low", destinations, ...segmentSettings });
+  const abrLadder = await norsk.processor.transform.videoEncode({ id: "ladder", rungs: ladderRungs });
+  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 60 }]
+  const masterOutput = await norsk.output.cmafMaster({ id: "master", playlistName: "master", destinations });
+  const audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings });
+  const highOutput = await norsk.output.cmafVideo({ id: "high", destinations, ...segmentSettings });
+  const mediumOutput = await norsk.output.cmafVideo({ id: "medium", destinations, ...segmentSettings });
+  const lowOutput = await norsk.output.cmafVideo({ id: "low", destinations, ...segmentSettings });
 
   highOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("high") }]);
   mediumOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("medium") }]);
@@ -42,7 +43,7 @@ export async function input_to_ladder(norsk: Norsk, input: RtmpServerInputNode |
 
   console.log(`Local player: ${masterOutput.playlistUrl}`);
 
-  let localRtcOutput = await norsk.output.whep({ id: "webrtc" });
+  const localRtcOutput = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
   localRtcOutput.subscribe([
     { source: abrLadder, sourceSelector: (streams: readonly StreamMetadata[]) =>
       {

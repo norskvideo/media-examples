@@ -5,20 +5,20 @@ import {
   Norsk,
   RtmpServerInputNode,
   StreamMetadata,
-  WebRTCBrowserNode,
   audioStreamKeys,
   videoStreamKeys,
   WhepOutputNode,
   WhepOutputSettings,
 } from "@norskvideo/norsk-sdk";
+import { webRtcServerConfig } from "./common/webRtcServerConfig";
 
-let allowedRenditions = {
+const allowedRenditions = {
   high: { bitrate: 800000 },
   medium: { bitrate: 500000 },
   low: { bitrate: 250000 },
 };
 
-let selectAVFromAllowed = (
+const selectAVFromAllowed = (
   app: string,
   publishingName: string,
   streams: StreamMetadata[]
@@ -35,7 +35,7 @@ let selectAVFromAllowed = (
   return [];
 };
 
-let selectVideoFromAllowed = (
+const selectVideoFromAllowed = (
   app: string,
   publishingName: string,
   streams: StreamMetadata[]
@@ -49,7 +49,7 @@ let selectVideoFromAllowed = (
   return [];
 };
 
-let selectAudioFromAllowed = (
+const selectAudioFromAllowed = (
   app: string,
   publishingName: string,
   streams: StreamMetadata[]
@@ -63,7 +63,7 @@ let selectAudioFromAllowed = (
   return [];
 };
 
-let subscribeAV = (
+const subscribeAV = (
   source: RtmpServerInputNode,
   app: string,
   publishingName: string
@@ -75,7 +75,7 @@ let subscribeAV = (
   };
 };
 
-let subscribeVideo = (
+const subscribeVideo = (
   source: RtmpServerInputNode,
   app: string,
   publishingName: string
@@ -87,7 +87,7 @@ let subscribeVideo = (
   };
 };
 
-let subscribeAudio = (
+const subscribeAudio = (
   source: RtmpServerInputNode,
   app: string,
   publishingName: string
@@ -104,15 +104,15 @@ type App = {
   webrtc: WhepOutputNode[];
   sources: string[];
 };
-let knownApps: { [x: string]: App } = {};
+const knownApps: { [x: string]: App } = {};
 
-let partDurationSeconds = 1.0;
-let segmentDurationSeconds = 4.0;
+const partDurationSeconds = 1.0;
+const segmentDurationSeconds = 4.0;
 
 export async function main() {
   const norsk = await Norsk.connect();
 
-  let input = await norsk.input.rtmpServer({
+  const input = await norsk.input.rtmpServer({
     id: "rtmp",
 
     onConnection: (_cid: string, app: string, url: string) => {
@@ -135,30 +135,30 @@ export async function main() {
       }
 
       console.log("Got RTMP stream", app, url, streamId, publishingName);
-      let onStream = async () => {
+      const onStream = async () => {
         const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
         // Register this app if we've not seen it before, and start up a master playlist for it
         if (!knownApps[app]) {
-          let settings: CmafMasterOutputSettings = {
+          const settings: CmafMasterOutputSettings = {
             id: "hls-master-" + app,
             playlistName: app,
             destinations,
           };
-          let masterPlaylist = await norsk.output.cmafMaster(settings);
+          const masterPlaylist = await norsk.output.cmafMaster(settings);
           knownApps[app] = { master: masterPlaylist, sources: [], webrtc: [] };
           console.log(`Local player: ${masterPlaylist.playlistUrl}`);
         }
         // Create a single WebRTC output for this new stream
-        let webRtcOutput = await norsk.output.whep({
+        const webRtcOutput = await norsk.output.whep({
           id: "webrtc-" + app + "-" + publishingName,
-          ...iceServerConfig()
+          ...webRtcServerConfig
         });
         webRtcOutput.subscribe([subscribeAV(input, app, publishingName)]);
         knownApps[app].webrtc.push(webRtcOutput);
         console.log(`Local player: ${webRtcOutput.playerUrl}`);
 
         // Create a single audio HLS output for this new stream
-        let audioOutput = await norsk.output.cmafAudio({
+        const audioOutput = await norsk.output.cmafAudio({
           id: "hls-" + app + "-" + publishingName + "-audio",
           partDurationSeconds,
           segmentDurationSeconds,
@@ -167,7 +167,7 @@ export async function main() {
         audioOutput.subscribe([subscribeAudio(input, app, publishingName)]);
 
         // Create a single video HLS output for this new stream
-        let videoOutput = await norsk.output.cmafVideo({
+        const videoOutput = await norsk.output.cmafVideo({
           id: "hls-" + app + "-" + publishingName + "-video",
           partDurationSeconds,
           segmentDurationSeconds,
@@ -203,14 +203,4 @@ export async function main() {
       };
     },
   });
-}
-function iceServerConfig(): WhepOutputSettings {
-  return (process.env.TURN_INTERNAL && process.env.TURN_EXTERNAL) ?
-    // Separate hostnames for server and client access to the turn server as in some cases they cannot resolve the same IP
-    {
-      iceServers: [{ urls: [`turn:${process.env.TURN_INTERNAL}:3478`], username: "norsk", credential: "norsk" }],
-      reportedIceServers: [{ urls: [`turn:${process.env.TURN_EXTERNAL}:3478`], username: "norsk", credential: "norsk" }]
-    }
-    :
-    { iceServers: [] };
 }

@@ -3,8 +3,8 @@ import { AudioSignalGeneratorSettings, CmafAudioOutputSettings, Norsk, mkSine, s
 export async function main() {
   const norsk = await Norsk.connect();
 
-  let input = await norsk.input.audioSignal(audioSignalSettings);
-  let audioOutput = await norsk.output.cmafAudio(hlsAudioSettings);
+  const input = await norsk.input.audioSignal(audioSignalSettings);
+  const audioOutput = await norsk.output.cmafAudio(hlsAudioSettings);
 
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
 

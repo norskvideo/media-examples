@@ -8,12 +8,13 @@ import {
   selectAudio,
   selectVideo,
 } from "@norskvideo/norsk-sdk";
+import { webRtcServerConfig } from "./common/webRtcServerConfig";
 import { Request, Response } from "express";
 
-const express = require("express");
+import express = require("express");
 
 export async function main() {
-  let ladderRungs: VideoEncodeRung[] = [
+  const ladderRungs: VideoEncodeRung[] = [
     {
       name: "high",
       width: 1280,
@@ -28,21 +29,21 @@ export async function main() {
       },
     },
   ];
-  let srtCamera1: SrtInputSettings = {
+  const srtCamera1: SrtInputSettings = {
     id: "camera1",
     ip: "0.0.0.0",
     port: 5001,
     mode: "listener",
     sourceName: "camera1",
   };
-  let srtCamera2: SrtInputSettings = {
+  const srtCamera2: SrtInputSettings = {
     id: "camera2",
     ip: "0.0.0.0",
     port: 5002,
     mode: "listener",
     sourceName: "camera2",
   };
-  let streamSwitchSmoothSettings: StreamSwitchSmoothSettings<"camera1" | "camera2"> = {
+  const streamSwitchSmoothSettings: StreamSwitchSmoothSettings<"camera1" | "camera2"> = {
     id: "switcher",
     activeSource: "camera1",
     outputSource: "output",
@@ -52,17 +53,17 @@ export async function main() {
   };
 
   const norsk = await Norsk.connect();
-  let camera1 = await norsk.input.srt(srtCamera1);
-  let camera2 = await norsk.input.srt(srtCamera2);
-  let streamSwitchSmooth = await norsk.processor.control.streamSwitchSmooth(streamSwitchSmoothSettings);
-  let output = await norsk.output.whep({ id: "webrtc" });
+  const camera1 = await norsk.input.srt(srtCamera1);
+  const camera2 = await norsk.input.srt(srtCamera2);
+  const streamSwitchSmooth = await norsk.processor.control.streamSwitchSmooth(streamSwitchSmoothSettings);
+const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
 
   streamSwitchSmooth.subscribeToPins([
     { source: camera1, sourceSelector: avToPin("camera1") },
     { source: camera2, sourceSelector: avToPin("camera2") },
   ]);
 
-  let ladder = await norsk.processor.transform.videoEncode({
+  const ladder = await norsk.processor.transform.videoEncode({
     id: "ladder",
     rungs: ladderRungs,
   });

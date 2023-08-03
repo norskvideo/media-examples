@@ -12,11 +12,11 @@ import {
 export async function main() {
   const norsk = await Norsk.connect();
 
-  let input = await norsk.input.rtp(rtpInputSettings);
-  let matrixMixer = await norsk.processor.transform.audioMixMatrix(
+  const input = await norsk.input.rtp(rtpInputSettings);
+  const matrixMixer = await norsk.processor.transform.audioMixMatrix(
     initialMixerSettings
   );
-  let audioOutput = await norsk.output.cmafAudio(hlsAudioSettings);
+  const audioOutput = await norsk.output.cmafAudio(hlsAudioSettings);
 
   matrixMixer.subscribe([{ source: input, sourceSelector: selectAudio }]);
   audioOutput.subscribe([{ source: matrixMixer, sourceSelector: selectAudio }]);

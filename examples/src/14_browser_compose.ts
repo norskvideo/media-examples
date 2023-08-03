@@ -3,8 +3,6 @@ import {
   CmafDestinationSettings,
   ComposePart,
   VideoComposeSettings,
-  HlsPushDestinationSettings,
-  LocalPullDestinationSettings,
   Norsk,
   selectAllVideos,
   selectAudio,
@@ -54,7 +52,7 @@ export async function main() {
     },
   ];
   let currentConfig = 0;
-  let config = configs[currentConfig];
+  const config = configs[currentConfig];
 
   const browserSettings: BrowserInputSettings = {
     url: config.browser.url,
@@ -100,10 +98,10 @@ export async function main() {
     },
   });
 
-  let input1 = await norsk.input.srt(srtSettings);
-  let input2 = await norsk.input.browser(browserSettings);
+  const input1 = await norsk.input.srt(srtSettings);
+  const input2 = await norsk.input.browser(browserSettings);
 
-  let compose = await norsk.processor.transform.videoCompose(composeSettings);
+  const compose = await norsk.processor.transform.videoCompose(composeSettings);
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },
@@ -111,14 +109,14 @@ export async function main() {
   ]);
 
   setInterval(() => {
-    let config = configs[currentConfig++ % configs.length];
+    const config = configs[currentConfig++ % configs.length];
     input2.updateConfig(config.browser);
     overlay.sourceRect = config.sourceRect;
     overlay.destRect = config.destRect;
     compose.updateConfig({ parts });
   }, 5000);
 
-  let videoStreamKeyConfig = {
+  const videoStreamKeyConfig = {
     id: "video_stream_key",
     streamKey: {
       programNumber: 1,
@@ -128,7 +126,7 @@ export async function main() {
     },
   };
 
-  let audioStreamKeyConfig = {
+  const audioStreamKeyConfig = {
     id: "audio_stream_key",
     streamKey: {
       programNumber: 1,
@@ -138,9 +136,9 @@ export async function main() {
     },
   };
 
-  let videoInput = await norsk.processor.transform.streamKeyOverride(videoStreamKeyConfig);
-  let audioInputKeyed = await norsk.processor.transform.streamKeyOverride(audioStreamKeyConfig);
-  let audioInput = await norsk.processor.transform.streamMetadataOverride({ audio: { bitrate: 20_000 } });
+  const videoInput = await norsk.processor.transform.streamKeyOverride(videoStreamKeyConfig);
+  const audioInputKeyed = await norsk.processor.transform.streamKeyOverride(audioStreamKeyConfig);
+  const audioInput = await norsk.processor.transform.streamMetadataOverride({ audio: { bitrate: 20_000 } });
 
   videoInput.subscribe([{ source: compose, sourceSelector: selectVideo }]);
   audioInputKeyed.subscribe([{ source: input1, sourceSelector: selectAudio }]);
@@ -167,7 +165,7 @@ export async function main() {
     };
   }
 
-  let ladderRungs: VideoEncodeRung[] = [
+  const ladderRungs: VideoEncodeRung[] = [
     mkRung("high", 1280, 720, 8000000,
       { // Override some of the default x264 settings for the high rung
         bframes: 3,
@@ -179,46 +177,46 @@ export async function main() {
     mkRung("low", 320, 180, 150000), // default x264 settings
   ];
 
-  let abrLadder = await norsk.processor.transform.videoEncode({ id: "ladder", rungs: ladderRungs });
+  const abrLadder = await norsk.processor.transform.videoEncode({ id: "ladder", rungs: ladderRungs });
 
   abrLadder.subscribe([{ source: videoInput, sourceSelector: selectVideo }]);
 
-  let segmentSettings = {
+  const segmentSettings = {
     partDurationSeconds: 1.0,
     segmentDurationSeconds: 4.0,
   };
-  let destinations: CmafDestinationSettings[] = [
+  const destinations: CmafDestinationSettings[] = [
     { type: "local", retentionPeriodSeconds: 10 },
   ];
 
-  let masterOutput = await norsk.output.cmafMaster({
+  const masterOutput = await norsk.output.cmafMaster({
     id: "master",
     playlistName: "master",
     destinations,
   });
-  let audioOutput = await norsk.output.cmafAudio({
+  const audioOutput = await norsk.output.cmafAudio({
     id: "audio",
     destinations,
     ...segmentSettings,
   });
-  let highOutput = await norsk.output.cmafVideo({
+  const highOutput = await norsk.output.cmafVideo({
     id: "high",
     destinations,
     ...segmentSettings,
   });
-  let mediumOutput = await norsk.output.cmafVideo({
+  const mediumOutput = await norsk.output.cmafVideo({
     id: "medium",
     destinations,
     ...segmentSettings,
   });
-  let lowOutput = await norsk.output.cmafVideo({
+  const lowOutput = await norsk.output.cmafVideo({
     id: "low",
     destinations,
     ...segmentSettings,
   });
 
   // Wire up the ladder
-  let ladderItem =
+  const ladderItem =
     (desiredRendition: string) => (streams: StreamMetadata[]) => {
       const video = videoStreamKeys(streams);
       // Don't subscribe at all till there is media from every rung in the ladder

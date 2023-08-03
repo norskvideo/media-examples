@@ -17,7 +17,7 @@ export async function main() {
   const norsk = await Norsk.connect();
 
   let connected = false;
-  let srtInputSettings: SrtInputSettings = {
+  const srtInputSettings: SrtInputSettings = {
     id: "srtInput",
     ip: "0.0.0.0",
     port: 5001,
@@ -33,9 +33,9 @@ export async function main() {
       }
     }
   };
-  let input = await norsk.input.srt(srtInputSettings);
+  const input = await norsk.input.srt(srtInputSettings);
 
-  let previewLadder: VideoEncodeRung[] = [
+  const previewLadder: VideoEncodeRung[] = [
     {
       name: "low",
       width: 854,
@@ -51,7 +51,7 @@ export async function main() {
       },
     },
   ];
-  let previewEncode = await norsk.processor.transform.videoEncode({
+  const previewEncode = await norsk.processor.transform.videoEncode({
     id: "preview_ladder",
     rungs: previewLadder,
   });
@@ -61,9 +61,9 @@ export async function main() {
 
   // Preview WebRTC node, subscribed to the preview-quality video encode and input audio
   // And outputting media from the connected browser
-  let previewRtc = await norsk.duplex.webRtcBrowser({
+  const previewRtc = await norsk.duplex.webRtcBrowser({
     id: "previewRtc",
-    ...iceServerConfig()
+    ...webRtcServerConfig()
   });
   previewRtc.subscribe([
     { source: previewEncode, sourceSelector: selectVideo },
@@ -71,7 +71,7 @@ export async function main() {
   ]);
   console.log(`Commentary WebRTC client: ${previewRtc.playerUrl}`);
 
-  let mixerSettings: AudioMixSettings<"source" | "comms"> = {
+  const mixerSettings: AudioMixSettings<"source" | "comms"> = {
     id: "mixer",
     onError: (err) => console.log("MIXER ERR", err),
     sampleRate: 48000,
@@ -81,13 +81,13 @@ export async function main() {
     ],
     outputSource: "source",
   };
-  let mixer = await norsk.processor.transform.audioMix(mixerSettings);
+  const mixer = await norsk.processor.transform.audioMix(mixerSettings);
   mixer.subscribeToPins([
     { source: input, sourceSelector: audioToPin('source') },
     { source: previewRtc, sourceSelector: audioToPin('comms') }
   ]);
 
-  let finalLadder: VideoEncodeRung[] = [
+  const finalLadder: VideoEncodeRung[] = [
     {
       name: "high",
       width: 1280,
@@ -138,26 +138,26 @@ export async function main() {
     }
   ];
 
-  let finalEncode = await norsk.processor.transform.videoEncode({
+  const finalEncode = await norsk.processor.transform.videoEncode({
     id: "final_ladder",
     rungs: finalLadder,
   });
   finalEncode.subscribe([{ source: input, sourceSelector: selectVideo }]);
-  let destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
-  let masterPlaylistSettings = { id: "master", playlistName: "master", destinations };
-  let mediaSettings = {
+  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+  const masterPlaylistSettings = { id: "master", playlistName: "master", destinations };
+  const mediaSettings = {
     partDurationSeconds: 1.0,
     segmentDurationSeconds: 4.0,
     destinations,
   };
 
-  let masterOutput = await norsk.output.cmafMaster(masterPlaylistSettings);
-  let audioOutput = await norsk.output.cmafAudio({ id: "audio", ...mediaSettings });
-  let highOutput = await norsk.output.cmafVideo({ id: "high", ...mediaSettings });
-  let mediumOutput = await norsk.output.cmafVideo({ id: "medium", ...mediaSettings });
-  let lowOutput = await norsk.output.cmafVideo({ id: "low", ...mediaSettings });
+  const masterOutput = await norsk.output.cmafMaster(masterPlaylistSettings);
+  const audioOutput = await norsk.output.cmafAudio({ id: "audio", ...mediaSettings });
+  const highOutput = await norsk.output.cmafVideo({ id: "high", ...mediaSettings });
+  const mediumOutput = await norsk.output.cmafVideo({ id: "medium", ...mediaSettings });
+  const lowOutput = await norsk.output.cmafVideo({ id: "low", ...mediaSettings });
 
-  let ladderItem =
+  const ladderItem =
     (desiredRendition: string) => (streams: StreamMetadata[]) => {
       const video = videoStreamKeys(streams);
       if (video.length == finalLadder.length) {
@@ -188,7 +188,7 @@ export async function main() {
 
   console.log(`Local player: ${masterOutput.playlistUrl}`);
 }
-function iceServerConfig(): WebRTCBrowserSettings {
+function webRtcServerConfig(): WebRTCBrowserSettings {
   return (process.env.TURN_INTERNAL && process.env.TURN_EXTERNAL) ?
     // Separate hostnames for server and client access to the turn server as in some cases they cannot resolve the same IP
     {

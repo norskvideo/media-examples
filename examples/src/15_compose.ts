@@ -10,6 +10,7 @@ import {
   selectVideo,
   videoToPin,
 } from "@norskvideo/norsk-sdk";
+import { webRtcServerConfig } from "./common/webRtcServerConfig";
 
 export async function main() {
   const srtSettings: SrtInputSettings = {
@@ -69,13 +70,13 @@ export async function main() {
   };
 
   const norsk = await Norsk.connect();
-  let input1 = await norsk.input.srt(srtSettings);
-  let input2 = await norsk.input.rtmpServer(rtmpSettings);
-  let input3 = await norsk.input.fileImage(fileSettings);
+  const input1 = await norsk.input.srt(srtSettings);
+  const input2 = await norsk.input.rtmpServer(rtmpSettings);
+  const input3 = await norsk.input.fileImage(fileSettings);
 
-  let compose = await norsk.processor.transform.videoCompose(composeSettings);
+  const compose = await norsk.processor.transform.videoCompose(composeSettings);
 
-  let output = await norsk.output.whep({ id: "webrtc" });
+const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },
@@ -83,7 +84,7 @@ export async function main() {
     { source: input3, sourceSelector: videoToPin(logo.pin) },
   ]);
 
-  let mixerSettings: AudioMixSettings<"input1" | "input2"> = {
+  const mixerSettings: AudioMixSettings<"input1" | "input2"> = {
     id: "mixer",
     onError: (err) => console.log("MIXER ERR", err),
     sampleRate: 48000,
@@ -94,7 +95,7 @@ export async function main() {
     outputSource: "output",
   };
 
-  let mixer = await norsk.processor.transform.audioMix(mixerSettings);
+  const mixer = await norsk.processor.transform.audioMix(mixerSettings);
   mixer.subscribeToPins([
     { source: input1, sourceSelector: audioToPin('input1') },
     { source: input2, sourceSelector: audioToPin('input2') }

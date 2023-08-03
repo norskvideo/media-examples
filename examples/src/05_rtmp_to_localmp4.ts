@@ -8,8 +8,8 @@ export async function main() {
     }
   });
 
-  let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
-  let output = await norsk.output.fileMp4({
+  const input = await norsk.input.rtmpServer({ id: "rtmpInput" });
+  const output = await norsk.output.fileMp4({
     id: "localMp4Output",
     fragmentedFileName: "/mnt/output/norskOutput.fmp4",
     nonfragmentedFileName: "/mnt/output/norskOutput.mp4",
@@ -24,7 +24,7 @@ export async function main() {
   // We can write non-fragmented snapshots periodically
   let i = 0;
   setInterval(() => {
-    let fileRoot = "/mnt/output/norskOutput";
+    const fileRoot = "/mnt/output/norskOutput";
     output.writeFile(`${fileRoot}${i += 1}.mp4`)
   }, 5000
   );

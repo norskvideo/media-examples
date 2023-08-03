@@ -3,7 +3,7 @@ import { input_to_ladder } from "./17_rtmp_to_ladder";
 
 export async function main(): Promise<void> {
     const norsk = await Norsk.connect();
-    let input = await norsk.input.srt(srtInputSettings);
+    const input = await norsk.input.srt(srtInputSettings);
     input_to_ladder(norsk, input);
 }
 

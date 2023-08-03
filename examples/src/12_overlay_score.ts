@@ -11,8 +11,9 @@ import {
   videoToPin,
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
+import { webRtcServerConfig } from "./common/webRtcServerConfig";
 
-const express = require("express");
+import express = require("express");
 const app = express();
 const port = 3000;
 
@@ -21,7 +22,7 @@ export async function main() {
 
   const norsk = await Norsk.connect();
 
-  let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
+  const input = await norsk.input.rtmpServer({ id: "rtmpInput" });
 
   const host = clientHostInternal();
   const browserSettings: BrowserInputSettings = {
@@ -31,7 +32,7 @@ export async function main() {
     sourceName: "browserOverlay",
     frameRate: { frames: 25, seconds: 1 },
   };
-  let browserInput = await norsk.input.browser(browserSettings);
+  const browserInput = await norsk.input.browser(browserSettings);
 
   const backgroundPart: ComposePart<"background"> = {
     pin: "background",
@@ -58,7 +59,7 @@ export async function main() {
     outputPixelFormat: "bgra",
     parts,
   };
-  let overlay = await norsk.processor.transform.videoCompose(composeSettings);
+  const overlay = await norsk.processor.transform.videoCompose(composeSettings);
 
   overlay.subscribeToPins([
     {
@@ -71,13 +72,13 @@ export async function main() {
     },
   ]);
 
-  let encode = await norsk.processor.transform.videoEncode({
+  const encode = await norsk.processor.transform.videoEncode({
     id: "ladder1",
     rungs: [mkRung("high", 854, 480, 800000)],
   });
   encode.subscribe([{ source: overlay, sourceSelector: selectVideo }]);
 
-  let output = await norsk.output.whep({ id: "webrtc" });
+const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
 
   output.subscribe([
     { source: encode, sourceSelector: selectVideo },
@@ -88,7 +89,7 @@ export async function main() {
 }
 
 function runWebServer() {
-  let scoreboard = {
+  const scoreboard = {
     team1: { name: "Team1", score: 0 },
     team2: { name: "Team2", score: 0 },
   };

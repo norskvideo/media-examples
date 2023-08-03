@@ -1,18 +1,19 @@
 import { FileTsOutputSettings, Norsk, StreamKeyOverrideSettings, selectAudio, selectVideo } from "@norskvideo/norsk-sdk";
+import { webRtcServerConfig } from "./common/webRtcServerConfig";
 
 export async function main() {
     const norsk = await Norsk.connect();
 
-    let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
-    let videoPidNormalizer = await norsk.processor.transform.streamKeyOverride(videoStreamKeyConfig);
-    let audioPidNormalizer = await norsk.processor.transform.streamKeyOverride(audioStreamKeyConfig);
-    let output1 = await norsk.output.whep({ id: "webrtc" });
-    let output2 = await norsk.output.fileTs(tsFileOutputSettings);
+    const input = await norsk.input.rtmpServer({ id: "rtmpInput" });
+    const videoPidNormalizer = await norsk.processor.transform.streamKeyOverride(videoStreamKeyConfig);
+    const audioPidNormalizer = await norsk.processor.transform.streamKeyOverride(audioStreamKeyConfig);
+    const output1 = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
+    const output2 = await norsk.output.fileTs(tsFileOutputSettings);
 
     videoPidNormalizer.subscribe([{ source: input, sourceSelector: selectVideo }]);
     audioPidNormalizer.subscribe([{ source: input, sourceSelector: selectAudio }]);
 
-    let normalizedSources = [{ source: videoPidNormalizer, sourceSelector: selectVideo }, { source: audioPidNormalizer, sourceSelector: selectAudio }];
+    const normalizedSources = [{ source: videoPidNormalizer, sourceSelector: selectVideo }, { source: audioPidNormalizer, sourceSelector: selectAudio }];
     output1.subscribe(normalizedSources);
     output2.subscribe(normalizedSources);
 

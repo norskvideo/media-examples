@@ -28,13 +28,13 @@ export async function main() {
   //
   // AAC audio does not need a transcode in this setting, and without a
   // transcode (implicit or explicit), there is no bitrate information added.
-  let srtAacInput = await norsk.input.srt(srtSettings);
+  const srtAacInput = await norsk.input.srt(srtSettings);
 
   // So we sample the stream for 10 seconds to estimate its bitrate and add this
   // bitrate to the stream's metadata before subscribing the master playlist to
   // the stream.
   let streamStarted = false;
-  let streamStatistics = await norsk.processor.control.streamStatistics({
+  const streamStatistics = await norsk.processor.control.streamStatistics({
     id: "inputStreamStatistics",
     statsSampling: {
       // 1s for visualiser updates
@@ -43,7 +43,7 @@ export async function main() {
       sampleIntervalsSeconds: [1, 5, 10],
     },
     onStreamStatistics: async stats => {
-      let { audio, video } = stats;
+      const { audio, video } = stats;
       if (stats.sampleSizeSeconds === 10) {
         if (streamStarted) return;
         streamStarted = true;
@@ -76,32 +76,32 @@ export async function main() {
     { source: srtAacInput, sourceSelector: selectAV },
   ]);
 
-  let streamMetadataOverride = await norsk.processor.transform.streamMetadataOverride({
+  const streamMetadataOverride = await norsk.processor.transform.streamMetadataOverride({
     id: "setBitrate",
   });
   streamMetadataOverride.subscribe([
     { source: srtAacInput, sourceSelector: selectAV },
   ]);
 
-  let destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
 
-  let masterPlaylistSettings = { id: "master", playlistName: "master", destinations };
-  let audio = {
+  const masterPlaylistSettings = { id: "master", playlistName: "master", destinations };
+  const audio = {
     id: "audio",
     partDurationSeconds: 1.0,
     segmentDurationSeconds: 4.0,
     destinations,
   };
-  let high = {
+  const high = {
     id: "high",
     partDurationSeconds: 1.0,
     segmentDurationSeconds: 4.0,
     destinations,
   };
 
-  let masterOutput = await norsk.output.cmafMaster(masterPlaylistSettings);
-  let audioOutput = await norsk.output.cmafAudio(audio);
-  let highOutput = await norsk.output.cmafVideo(high);
+  const masterOutput = await norsk.output.cmafMaster(masterPlaylistSettings);
+  const audioOutput = await norsk.output.cmafAudio(audio);
+  const highOutput = await norsk.output.cmafVideo(high);
 
   highOutput.subscribe([
     { source: streamMetadataOverride, sourceSelector: selectVideo },

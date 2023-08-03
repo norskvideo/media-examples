@@ -17,9 +17,9 @@ import {
 export async function main() {
   const norsk = await Norsk.connect();
 
-  let audioSignalInput = await norsk.input.audioSignal(audioInputSettings());
+  const audioSignalInput = await norsk.input.audioSignal(audioInputSettings());
 
-  let mosaic = new Mosaic(norsk, audioSignalInput);
+  const mosaic = new Mosaic(norsk, audioSignalInput);
 
   await mosaic.run();
 }
@@ -77,8 +77,8 @@ class Mosaic {
       // "I only know about one state";
       return;
     }
-    for (let key of streamKeys) {
-      let stream = key.videoStreamKey?.sourceName?.sourceName;
+    for (const key of streamKeys) {
+      const stream = key.videoStreamKey?.sourceName?.sourceName;
       this.streams = this.streams.filter((x) => x !== stream);
       console.log(`Stream disconnected: ${stream}`);
       this.handleStreamChange();
@@ -102,8 +102,8 @@ class Mosaic {
             {
               source: this.rtmpInput!,
               sourceSelector: (streamMetadata: StreamMetadata[]) => {
-                let pins: PinToKey<string> = {};
-                for (let stream of this.streams) {
+                const pins: PinToKey<string> = {};
+                for (const stream of this.streams) {
                   pins[stream] = videoStreamKeys(streamMetadata).filter(
                     (x) => x?.sourceName == stream
                   );
@@ -113,7 +113,7 @@ class Mosaic {
             },
           ]);
 
-          let encode = await this.norsk.processor.transform.videoEncode({
+          const encode = await this.norsk.processor.transform.videoEncode({
             id: "ladder1",
             rungs: [mkRung("high", 854, 480, 800000)]
           });
@@ -121,7 +121,7 @@ class Mosaic {
             { source: this.compose, sourceSelector: videoStreamKeys },
           ]);
 
-          let output = await this.norsk.output.hlsTsVideo({
+          const output = await this.norsk.output.hlsTsVideo({
             id: "video",
             segmentDurationSeconds: 4.0,
             destinations: [{ type: "local", retentionPeriodSeconds: 60 }],
@@ -134,7 +134,7 @@ class Mosaic {
             "http://localhost:8080/cmaf/file/stream/source1-1-2-high/playlist.m3u8"
           );
 
-          let rtcOutput = await this.norsk.output.whep({ id: "webrtc" });
+          const rtcOutput = await this.norsk.output.whep({ id: "webrtc" });
           rtcOutput.subscribe([
             { source: encode, sourceSelector: videoStreamKeys },
             { source: this.audioSignalInput, sourceSelector: audioStreamKeys },
@@ -147,11 +147,11 @@ class Mosaic {
     else if (this.streams.length > 0) {
       setInterval(this.handleStreamChange.bind(this), 500);
     }
-  };
+  }
 }
 
 function createParts(streams: string[]) {
-  let division = Math.ceil(Math.sqrt(streams.length));
+  const division = Math.ceil(Math.sqrt(streams.length));
   return streams.map((stream, i) => ({
     destRect: {
       width: 100 / division,

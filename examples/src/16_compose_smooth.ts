@@ -7,6 +7,7 @@ import {
   selectVideo,
   videoToPin,
 } from "@norskvideo/norsk-sdk"
+import { webRtcServerConfig } from "./common/webRtcServerConfig";
 
 export async function main() {
   const srtSettings: SrtInputSettings = {
@@ -60,12 +61,12 @@ export async function main() {
       process.exit(1)
     }
   });
-  let input1 = await norsk.input.srt(srtSettings);
-  let input2 = await norsk.input.rtmpServer(rtmpSettings);
+  const input1 = await norsk.input.srt(srtSettings);
+  const input2 = await norsk.input.rtmpServer(rtmpSettings);
 
-  let compose = await norsk.processor.transform.videoCompose(composeSettings);
+  const compose = await norsk.processor.transform.videoCompose(composeSettings);
 
-  let output = await norsk.output.whep({ id: "webrtc" });
+const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },
