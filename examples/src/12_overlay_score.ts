@@ -5,7 +5,6 @@ import {
   VideoComposeSettings,
   VideoEncodeRung,
   clientHostExternal,
-  clientHostInternal,
   selectVideo,
   selectAudio,
   videoToPin,
@@ -24,7 +23,7 @@ export async function main() {
 
   const input = await norsk.input.rtmpServer({ id: "rtmpInput" });
 
-  const host = clientHostInternal();
+  const host = clientHostExternal();
   const browserSettings: BrowserInputSettings = {
     id: "browser",
     url: `http://${host}:3000/static/overlay-score.html`,
@@ -85,7 +84,7 @@ const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
     { source: input, sourceSelector: selectAudio },
   ]);
 
-  console.log(`Local player: ${output.playerUrl}`);
+  console.log(`WebRTC Player URL: ${output.playerUrl}`);
 }
 
 function runWebServer() {

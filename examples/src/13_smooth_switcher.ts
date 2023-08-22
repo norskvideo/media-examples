@@ -56,7 +56,7 @@ export async function main() {
   const camera1 = await norsk.input.srt(srtCamera1);
   const camera2 = await norsk.input.srt(srtCamera2);
   const streamSwitchSmooth = await norsk.processor.control.streamSwitchSmooth(streamSwitchSmoothSettings);
-const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
+  const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
 
   streamSwitchSmooth.subscribeToPins([
     { source: camera1, sourceSelector: avToPin("camera1") },
@@ -97,8 +97,8 @@ const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
   </script>
   <body class="doodle">
     <p>
-      <button onclick="swap('camera1'); return false" style="font-size: 35">Camera 1</button>
-      <button onclick="swap('camera2'); return false" style="font-size: 35">Camera 2</button>
+      <button class="my-button" onclick="swap('camera1'); return false" style="font-size: 35">Camera 1</button>
+      <button class="my-button" onclick="swap('camera2'); return false" style="font-size: 35">Camera 2</button>
     </p>
     <iframe width=1280 height=720 frameBorder="0" src="${output.playerUrl}"></iframe>
   </body>
@@ -109,7 +109,7 @@ const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
     console.log(
       `Hosted smooth_switcher app listening on http://${host}:${port}/`
     );
-    console.log(`Local player: ${output.playerUrl}`);
+    console.log(`WebRTC Player URL: ${output.playerUrl}`);
   });
 }
 

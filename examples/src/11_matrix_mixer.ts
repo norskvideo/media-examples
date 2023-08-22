@@ -2,7 +2,7 @@ import {
   AudioMixMatrixSettings,
   AudioMixMatrixSettingsUpdate,
   Gain,
-  CmafAudioOutputSettings,
+  CmafOutputSettings,
   Norsk,
   RtpInputSettings,
   selectAudio,
@@ -57,7 +57,7 @@ const initialMixerSettings: AudioMixMatrixSettings = {
   channelGains: mixA,
 };
 
-const hlsAudioSettings: CmafAudioOutputSettings = {
+const hlsAudioSettings: CmafOutputSettings = {
   id: "hls-audio",
   partDurationSeconds: 1.0,
   segmentDurationSeconds: 4.0,

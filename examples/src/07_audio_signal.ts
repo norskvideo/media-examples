@@ -1,4 +1,4 @@
-import { AudioSignalGeneratorSettings, CmafAudioOutputSettings, Norsk, mkSine, selectAudio } from "@norskvideo/norsk-sdk";
+import { AudioSignalGeneratorSettings, CmafOutputSettings, Norsk, mkSine, selectAudio } from "@norskvideo/norsk-sdk";
 
 export async function main() {
   const norsk = await Norsk.connect();
@@ -21,7 +21,7 @@ const audioSignalSettings: AudioSignalGeneratorSettings = {
   wave: mkSine(440),
 };
 
-const hlsAudioSettings: CmafAudioOutputSettings = {
+const hlsAudioSettings: CmafOutputSettings = {
   id: "hls-audio",
   partDurationSeconds: 1.0,
   segmentDurationSeconds: 4.0,

@@ -17,7 +17,7 @@ export async function main() {
     output1.subscribe(normalizedSources);
     output2.subscribe(normalizedSources);
 
-    console.log(`Local player: ${output1.playerUrl}`);
+    console.log(`WebRTC Player URL: ${output1.playerUrl}`);
 }
 
 const videoStreamKeyConfig: StreamKeyOverrideSettings = {

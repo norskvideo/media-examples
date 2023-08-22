@@ -3,6 +3,7 @@ import {
   Norsk,
   selectAudio,
   selectAV,
+  selectPlaylist,
   selectVideo,
 } from "@norskvideo/norsk-sdk";
 import { randomUUID } from "crypto";
@@ -13,21 +14,21 @@ export async function main() {
   // Client generates the key IDs for audio and video
   // For production, you should use randomUUID()
   // But for testing, static key IDs may be convenient if you are copying the token
-  let audioEncryptionKeyId = randomUUID();
-  let videoEncryptionKeyId = randomUUID();
+  const audioEncryptionKeyId = randomUUID();
+  const videoEncryptionKeyId = randomUUID();
 
   console.log();
   if (!process.env["AXINOM_TENANT_ID"] || !process.env["AXINOM_MGMT_KEY"] || (!process.env["AXINOM_COM_KEY_ID"] !== !process.env["AXINOM_COM_KEY"])) {
-    let envvar = (k: string) => "$" + k + " " + (process.env[k] ? "\u2713" : "\u2717");
+    const envvar = (k: string) => "$" + k + " " + (process.env[k] ? "\u2713" : "\u2717");
     console.error(
       "Error: This example integration requires these environment variables to be set:\n ",
-      envvar("AXINOM_TENANT_ID")+"\n ",
+      envvar("AXINOM_TENANT_ID") + "\n ",
       "  Tenant ID from your Axinom DRM account\n ",
-      envvar("AXINOM_MGMT_KEY")+"\n ",
+      envvar("AXINOM_MGMT_KEY") + "\n ",
       "  Management Key from your Axinom DRM account\n ",
-      envvar("AXINOM_COM_KEY_ID")+" (optional, for playback)\n ",
+      envvar("AXINOM_COM_KEY_ID") + " (optional, for playback)\n ",
       "  Communication Key ID from your Axinom DRM account\n ",
-      envvar("AXINOM_COM_KEY")+" (optional, for playback)\n ",
+      envvar("AXINOM_COM_KEY") + " (optional, for playback)\n ",
       "  Communication Key from your Axinom DRM account",
     );
     return process.exit(1);
@@ -44,7 +45,7 @@ export async function main() {
   // set audioEncryptionKeyId and videoEncryptionKeyId to static values)
   console.log(
     "HEADERS > Header Value (*Changes each run):\n ",
-    mkToken([ audioEncryptionKeyId, videoEncryptionKeyId ])
+    mkToken([audioEncryptionKeyId, videoEncryptionKeyId])
   );
   console.log();
   console.log("EXTRA CONFIG:\n ", JSON.stringify({
@@ -57,23 +58,23 @@ export async function main() {
 
   const norsk = await Norsk.connect();
 
-  let input = await norsk.input.rtmpServer({ id: "rtmpInput" });
+  const input = await norsk.input.rtmpServer({ id: "rtmpInput" });
 
   // Send these key IDs to Axinom and parse out the encryption information to
   // pass to the Norsk nodes.
-  let { audio: audioEncryption, video: videoEncryption } = await obtainKeys({
+  const { audio: audioEncryption, video: videoEncryption } = await obtainKeys({
     audio: audioEncryptionKeyId,
     video: videoEncryptionKeyId,
   });
 
-  let fileOutput = await norsk.output.fileMp4({
+  const fileOutput = await norsk.output.fileMp4({
     id: "file",
     fragmentedFileName: "/mnt/output/encrypted.mp4",
     audioEncryption,
     videoEncryption,
   });
 
-  let audioOutput = await norsk.output.cmafAudio({
+  const audioOutput = await norsk.output.cmafAudio({
     id: "audio",
     destinations,
     encryption: audioEncryption,
@@ -81,7 +82,7 @@ export async function main() {
     m3uAdditions: audioEncryption.mediaSignaling,
     mpdAdditions: audioEncryption.contentProtection,
   });
-  let videoOutput = await norsk.output.cmafVideo({
+  const videoOutput = await norsk.output.cmafVideo({
     id: "video",
     destinations,
     encryption: videoEncryption,
@@ -89,7 +90,7 @@ export async function main() {
     m3uAdditions: videoEncryption.mediaSignaling,
     mpdAdditions: videoEncryption.contentProtection,
   });
-  let masterOutput = await norsk.output.cmafMaster({
+  const masterOutput = await norsk.output.cmafMultiVariant({
     id: "master",
     playlistName: "master",
     destinations,
@@ -103,7 +104,10 @@ export async function main() {
   fileOutput.subscribe([{ source: input, sourceSelector: selectAV }]);
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
   videoOutput.subscribe([{ source: input, sourceSelector: selectVideo }]);
-  masterOutput.subscribe([{ source: input, sourceSelector: selectAV }]);
+  masterOutput.subscribe([
+    { source: audioOutput, sourceSelector: selectPlaylist },
+    { source: videoOutput, sourceSelector: selectPlaylist }
+  ]);
 
   console.log("MAIN > Manifest URL:\n ", masterOutput.playlistUrl);
   console.log();
@@ -126,11 +130,11 @@ type Multi<T> = {
 
 export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi<KeyResponse>> {
   // Use AXINOM_TENANT_ID and AXINOM_MGMT_KEY to authenticate
-  let endpoint = "https://key-server-management.axprod.net/api/SpekeV2";
-  let auth = Buffer.from(`${process.env["AXINOM_TENANT_ID"]}:${process.env["AXINOM_MGMT_KEY"]}`, "utf-8").toString("base64");
+  const endpoint = "https://key-server-management.axprod.net/api/SpekeV2";
+  const auth = Buffer.from(`${process.env["AXINOM_TENANT_ID"]}:${process.env["AXINOM_MGMT_KEY"]}`, "utf-8").toString("base64");
 
   // Build a CPIX document containing the keys and systems
-  let request = `
+  const request = `
     <?xml version="1.0"?>
     <cpix:CPIX contentId="abc123" version="2.3" xmlns:cpix="urn:dashif:org:cpix" xmlns:pskc="urn:ietf:params:xml:ns:keyprov:pskc">
       <cpix:ContentKeyList>
@@ -183,73 +187,74 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
       </cpix:ContentKeyUsageRuleList>
     </cpix:CPIX>
   `.split('\n').map(line => line.substring(4)).join('\n').trim();
-  let response_inflight = await fetch(endpoint, {
+  const response_inflight = await fetch(endpoint, {
     method: "POST",
     withCredentials: true,
     credentials: "include",
     headers: {
       "Content-Type": "application/xml",
-      "Authorization": "Basic "+auth,
+      "Authorization": "Basic " + auth,
       "X-Speke-Version": "2.0",
     },
     body: request,
-  } as any);
+  } as RequestInit);
   if (!response_inflight.ok) {
     throw new Error(response_inflight.status + " " + response_inflight.headers.get("x-axdrm-errormessage") || "unknown error from Axinom API");
   }
-  let response = await response_inflight.text();
+  const response = await response_inflight.text();
 
   // The endpoint returns a CPIX response, which we parse to JSON for convenience
-  let parsed = new XMLParser({ ignoreDeclaration: true, ignorePiTags: true, ignoreAttributes: false }).parse(response);
+  const parsed = new XMLParser({ ignoreDeclaration: true, ignorePiTags: true, ignoreAttributes: false }).parse(response);
   // The body of the CPIX response
-  let cpix = parsed["cpix:CPIX"];
+  const cpix = parsed["cpix:CPIX"];
 
-  let result: Multi<KeyResponse | undefined> = { audio: undefined, video: undefined };
+  const result: Multi<KeyResponse | undefined> = { audio: undefined, video: undefined };
 
   // Extract the information for audio and video keys from the CPIX
-  for (let key of ["audio", "video"] as const) {
-    let encryptionKeyId = encryptionKeyIds[key];
+  for (const key of ["audio", "video"] as const) {
+    const encryptionKeyId = encryptionKeyIds[key];
 
     // Extract the key from the ContentKeyList node
     let encryptionKey = "";
-    let ContentKeys = XMLList(cpix["cpix:ContentKeyList"]["cpix:ContentKey"]);
-    for (let ContentKey of ContentKeys) {
+    const ContentKeys = XMLList(cpix["cpix:ContentKeyList"]["cpix:ContentKey"]);
+    for (const ContentKey of ContentKeys) {
       if (ContentKey["@_kid"] !== encryptionKeyId) continue;
-      let encryptionKeyBase64 = ContentKey["cpix:Data"]["pskc:Secret"]["pskc:PlainValue"];
+      const encryptionKeyBase64 = ContentKey["cpix:Data"]["pskc:Secret"]["pskc:PlainValue"];
       encryptionKey = Buffer.from(encryptionKeyBase64, "base64").toString("hex");
     }
 
     if (!encryptionKey) throw new Error(`Could not find encryption key ${encryptionKeyId} in response`);
 
     // Extract the PSSH boxes, which will get embedded into the MP4
-    let encryptionPsshs: string[] = [];
+    const encryptionPsshs: string[] = [];
     // And signaling data for playlists
-    let mediaSignalings: string[] = [];
-    let masterSignalings: string[] = [];
+    const mediaSignalings: string[] = [];
+    const masterSignalings: string[] = [];
     let contentProtection: string = `
       <ContentProtection xmlns:cenc="urn:mpeg:cenc:2013" cenc:default_KID="${encryptionKeyId}"
         schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" />
     `;
 
-    let DRMSystems = XMLList(cpix["cpix:DRMSystemList"]["cpix:DRMSystem"]);
-    for (let DRMSystem of DRMSystems) {
+    const DRMSystems = XMLList(cpix["cpix:DRMSystemList"]["cpix:DRMSystem"]);
+    for (const DRMSystem of DRMSystems) {
       if (DRMSystem["@_kid"] !== encryptionKeyId) continue;
-      encryptionPsshs.push(DRMSystem["cpix:PSSH"] || "");
-      mediaSignalings.push(playlist("media"));
-      masterSignalings.push(playlist("master"));
 
       // Look up a playlist by name
-      function playlist(name: "media" | "master") {
-        for (let signaling of XMLList(DRMSystem["cpix:HLSSignalingData"])) {
+      const playlist = (name: "media" | "master") => {
+        for (const signaling of XMLList(DRMSystem["cpix:HLSSignalingData"])) {
           if (signaling["@_playlist"] === name) return XMLText(signaling);
           if (typeof signaling === "string" && name === "media") return signaling;
         }
         return "";
       }
 
-      let systemId = DRMSystem["@_systemId"];
+      encryptionPsshs.push(DRMSystem["cpix:PSSH"] || "");
+      mediaSignalings.push(playlist("media"));
+      masterSignalings.push(playlist("master"));
+
+      const systemId = DRMSystem["@_systemId"];
       if (typeof systemId === "string") {
-        let contentProtectionData = XMLText(DRMSystem["cpix:ContentProtectionData"]);
+        const contentProtectionData = XMLText(DRMSystem["cpix:ContentProtectionData"]);
         contentProtection += `
           <ContentProtection xmlns:cenc="urn:mpeg:cenc:2013" cenc:default_KID="${encryptionKeyId}"
             schemeIdUri="urn:uuid:${systemId}">
@@ -260,10 +265,10 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
     }
 
     // The data from each system gets concatenated together
-    let encryptionPssh = cat64(encryptionPsshs);
+    const encryptionPssh = cat64(encryptionPsshs);
     // with newline separators for the signaling
-    let mediaSignaling = mediaSignalings.map(un64).join("\n");
-    let masterSignaling = masterSignalings.map(un64).join("\n");
+    const mediaSignaling = mediaSignalings.map(un64).join("\n");
+    const masterSignaling = masterSignalings.map(un64).join("\n");
 
     result[key] = {
       encryptionKey,
@@ -282,21 +287,26 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
   return { audio: result.audio, video: result.video };
 
   // Helpers for picking apart the XML-as-JSON
-  function XMLList(nodes: any): any[] {
+  function XMLList<T>(nodes: T): T[] {
     if (Array.isArray(nodes)) return nodes;
     return [nodes];
   }
-  function XMLText(node: any): string {
+  function XMLText(node: Element | Text | string | undefined | null): string {
     if (node === undefined || node === null) return "";
     if (typeof node === "string") return node;
-    if (typeof node["#text"] === "string") return node["#text"];
+    if (node instanceof Text) return node.textContent || "";
+    if (node instanceof Element) {
+        const textNode = node.textContent;
+        if (textNode !== null) return textNode;
+    }
     return "";
   }
+
   // Concat base64 representations
   function cat64(items: string[], sep?: string) {
     let buffers = items.map(s => Buffer.from(s, "base64"));
     if (sep) {
-      let sepb = Buffer.from(sep, "utf-8");
+      const sepb = Buffer.from(sep, "utf-8");
       buffers = Array.prototype.concat(...buffers.map(b => [sepb, b])).slice(1);
     }
     return Buffer.concat(buffers).toString("base64");
@@ -312,7 +322,7 @@ export function mkToken(keys: string[]) {
   }
   // Generates an example token for client playback
   // See Axinom documentation for fields
-  let msg = {
+  const msg = {
     "version": 1,
     "begin_date": "2000-01-01T09:53:22+03:00",
     "expiration_date": "2025-12-31T23:59:40+03:00",
@@ -328,10 +338,10 @@ export function mkToken(keys: string[]) {
       }
     }
   };
-  let communicationKey = Buffer.from(process.env["AXINOM_COM_KEY"] || "", "base64");
+  const communicationKey = Buffer.from(process.env["AXINOM_COM_KEY"] || "", "base64");
   return jwt.sign(msg, communicationKey, {
-      "algorithm": "HS256",
-      "noTimestamp": true
+    "algorithm": "HS256",
+    "noTimestamp": true
   });
 }
 

@@ -8,5 +8,5 @@ export async function main() {
   const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig }); 
 
   output.subscribe([{ source: input, sourceSelector: selectAV }]); 
-  console.log(`Local player: ${output.playerUrl}`);
+  console.log(`WebRTC Player URL: ${output.playerUrl}`);
 }

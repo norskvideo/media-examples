@@ -5,6 +5,7 @@ import {
   selectAudio,
   selectAV,
   selectVideo,
+  selectPlaylist,
 } from "@norskvideo/norsk-sdk";
 
 export async function main() {
@@ -24,14 +25,14 @@ export async function main() {
   });
 
   // SRT inputs do not have bitrate information, which is required for HLS
-  // master playlists.
+  // multi variant playlists.
   //
   // AAC audio does not need a transcode in this setting, and without a
   // transcode (implicit or explicit), there is no bitrate information added.
   const srtAacInput = await norsk.input.srt(srtSettings);
 
   // So we sample the stream for 10 seconds to estimate its bitrate and add this
-  // bitrate to the stream's metadata before subscribing the master playlist to
+  // bitrate to the stream's metadata before subscribing the multi variant playlist to
   // the stream.
   let streamStarted = false;
   const streamStatistics = await norsk.processor.control.streamStatistics({
@@ -61,9 +62,9 @@ export async function main() {
           }
         });
 
-        // And subscribe the master playlist, now that the stream has bitrate
+        // And subscribe the multi variant playlist, now that the stream has bitrate
         // metadata
-        masterOutput.subscribe([
+        multiVariantOutput.subscribe([
           { source: streamMetadataOverride, sourceSelector: selectAV },
         ]);
       } else if (stats.sampleSizeSeconds === 5 && streamStarted) {
@@ -85,7 +86,7 @@ export async function main() {
 
   const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
 
-  const masterPlaylistSettings = { id: "master", playlistName: "master", destinations };
+  const multiVariantPlaylistSettings = { id: "multi-variant", playlistName: "multi-variant", destinations };
   const audio = {
     id: "audio",
     partDurationSeconds: 1.0,
@@ -99,7 +100,7 @@ export async function main() {
     destinations,
   };
 
-  const masterOutput = await norsk.output.cmafMaster(masterPlaylistSettings);
+  const multiVariantOutput = await norsk.output.cmafMultiVariant(multiVariantPlaylistSettings);
   const audioOutput = await norsk.output.cmafAudio(audio);
   const highOutput = await norsk.output.cmafVideo(high);
 
@@ -109,7 +110,11 @@ export async function main() {
   audioOutput.subscribe([
     { source: streamMetadataOverride, sourceSelector: selectAudio },
   ]);
+  multiVariantOutput.subscribe([
+    { source: audioOutput, sourceSelector: selectPlaylist },
+    { source: highOutput, sourceSelector: selectPlaylist }
+  ])
 
-  console.log(`Local player: ${masterOutput.playlistUrl}`);
+  console.log(`HLS Multi Variant Playlist: ${multiVariantOutput.playlistUrl}`);
 }
 
