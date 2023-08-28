@@ -8,30 +8,36 @@ declare LICENSE_FILE
 declare DOCKER_UID=${NORSK_UID:=$(id -u)}
 declare DOCKER_GID=${NORSK_GID:=$(id -g)}
 
-declare -r HOST_NAME=$(hostname 2>/dev/null || echo "127.0.0.1")
+declare -r CONFIG_FILE="./.config"
 
-declare -r CLIENT_HOST_DEFAULT=${HOST_NAME}
-declare -r CLIENT_HOST=${CLIENT_HOST:-$CLIENT_HOST_DEFAULT}
+declare CLIENT_HOST
+declare PUBLIC_URL_PREFIX
+declare DEBUG_URL_PREFIX
+declare GRAFANA_URL
 
-declare -r PUBLIC_URL_PREFIX_DEFAULT="http://${CLIENT_HOST}:8080"
-declare    PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-$PUBLIC_URL_PREFIX_DEFAULT}
+declare TURN_DEFAULT
+declare NETWORK_MODE_DEFAULT
 
-declare -r DEBUG_URL_PREFIX_DEFAULT="http://${CLIENT_HOST}:6791"
-declare -r DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX:-$DEBUG_URL_PREFIX_DEFAULT}
 
-declare -r GRAFANA_URL_DEFAULT="http://${CLIENT_HOST}:3100"
-declare -r GRAFANA_URL=${GRAFANA_URL:-$GRAFANA_URL_DEFAULT}
+declare -r LOG_DEFAULT="norskLogs"
+if [[ "$OSTYPE" == "linux"* ]]; then
+    TURN_DEFAULT=false
+    NETWORK_MODE_DEFAULT="host"
+else
+    TURN_DEFAULT=true
+    NETWORK_MODE_DEFAULT="docker"
+fi
 
 function usage() {
     # TODO :)
     echo "Usage: run-example [options] cmd"
     echo "  Options:"
-    echo "    --license-file <license-file> : where on the host to mount the Norsk license file."
-    echo "    --log-root <log-dir> : where on the host to mount Norsk's logs.  The actual logs will be in a subdirectory with the name of the example you are running.  Default ./norskLogs"
-if [[ "$OSTYPE" == "linux"* ]]; then
-    echo "    --network-mode [docker|host] : whether the example should run in host or docker network mode.  Defaults to host"
-fi
+    echo "    --log-root <log-dir> : where on the host to mount Norsk's logs.  The actual logs will be in a subdirectory with the name of the example you are running.  Default $LOG_DEFAULT"
+    if [[ "$OSTYPE" == "linux"* ]]; then
+        echo "    --network-mode [docker|host] : whether the example should run in host or docker network mode.  Defaults to $NETWORK_MODE_DEFAULT"
+    fi
     echo "    --metrics [true|false] : whether metrics containers are included. Defaults to false"
+    echo "    --turn [true|false] : whether turn containers are included. Defaults to $TURN_DEFAULT"
     echo "    --run-source [true|false] : whether a source (or sources) are automatically started.  Defaults to true"
     echo "    --uid <uid> : the UID to run the as.  Defaults to the current user's UID"
     echo "    --gid <gid> : the GID to run the as.  Defaults to the current user's GID"
@@ -42,9 +48,13 @@ fi
     echo "        or just the name (e.g. hello_norsk)"
     echo "    stop : Stops all example containers and deletes the associated docker network (if any)"
     echo
+    echo "  Config file: (./.config)"
+    echo "    LICENSE_FILE - relative path to your Norsk license file"
+    echo "    CLIENT_HOST - the IP used for public access to this Norsk application"
+    echo
     echo "  Environment variables:"
-    echo "    LICENSE_FILE - the value of --license-file can alternatively be provided using this environment variable"
-    echo "    CLIENT_HOST - adjust the hostname/IP used for public access to this Norsk application. default: 'hostname' ($CLIENT_HOST_DEFAULT)"
+    echo "    LICENSE_FILE - overrides the value in your config file"
+    echo "    CLIENT_HOST - overrides the value in your config file"
     echo "    PUBLIC_URL_PREFIX - adjust the prefix applied to displayed public URLs (playlists etc). default: $PUBLIC_URL_PREFIX_DEFAULT"
     echo "    DEBUG_URL_PREFIX - adjust the prefix applied to displayed debug URLs (visualiser etc). default: $DEBUG_URL_PREFIX_DEFAULT"
     echo "    NORSK_UID - the value of --uid can alternatively be provided using this environment variable"
@@ -69,12 +79,78 @@ function dockerComposeCmd() {
     fi
 }
 
+realpath() {
+    local expanded="${1/#\~/$HOME}"
+    echo "$(cd "$(dirname "$expanded")" && pwd)/$(basename "$expanded")"
+}
+
+read_config() {
+    local license_path
+    local abs_lp
+    local ip_address
+    local public_candidate
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "This seems to be your first time running the Norsk examples."
+        while [[ ! -f "$abs_lp" ]]; do
+            read -e -p "Enter the path to your license file: " license_path
+            abs_lp=$(realpath "$license_path")
+            if [[ ! -f "$abs_lp" ]]; then
+                echo "The specified license file does not exist. Please try again."
+            fi
+        done
+        echo
+
+        # Take a guess at our public and private IP addresses
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            echo "Running on a Mac - only 127.0.0.1 access supported"
+            ip_address="127.0.0.1"
+        else
+            public_candidate=$(curl -s --max-time 1 ifconfig.me || true)
+
+            echo "What IP address you will access the Norsk applications on?"
+            echo "If in doubt use 127.0.0.1"
+            if [[ -n "$public_candidate" ]]; then
+                echo "  Your public IP address is $public_candidate"
+                echo
+            fi
+            echo "  Local IP addresses:"
+            ip addr show 2>/dev/null || ifconfig | grep 'inet ' | awk '{print ,$2}'
+            echo
+            read -p "Enter your IP address: " ip_address
+        fi
+
+        echo "LICENSE_FILE=$license_path" >"$CONFIG_FILE"
+        echo "CLIENT_HOST=$ip_address" >>"$CONFIG_FILE"
+        echo "Configuration saved."
+        LICENSE_FILE=$license_path
+        CLIENT_HOST=$ip_address
+    else
+        local -r ENV_LICENSE_FILE=${LICENSE_FILE:-}
+        local -r ENV_CLIENT_HOST=${CLIENT_HOST:-}
+        source "$CONFIG_FILE"
+        if [[ -z "$LICENSE_FILE" || -z "$CLIENT_HOST" ]]; then
+            echo "Configuration file incomplete. Restarting:"
+            rm "$CONFIG_FILE"
+            read_config
+        else
+            # Env variables have priority over the config file
+            if [[ -n "$ENV_LICENSE_FILE" ]]; then
+                LICENSE_FILE=$ENV_LICENSE_FILE
+            fi
+            if [[ -n "$ENV_CLIENT_HOST" ]]; then
+                CLIENT_HOST=$ENV_CLIENT_HOST
+            fi
+            echo "Welcome back! Using license file $LICENSE_FILE and IP address $CLIENT_HOST"
+        fi
+    fi
+}
+
 function listExamples() {
-    cat docker-compose/host-networking/*yml \
-    | grep -e '^#' \
-    | sed -e 's/# Norsk Media example: //' \
-          -e 's/#/ /' \
-          -e '/^[[:space:]]*$/d'
+    cat docker-compose/host-networking/*yml |
+        grep -e '^#' |
+        sed -e 's/# Norsk Media example: //' \
+            -e 's/#/ /' \
+            -e '/^[[:space:]]*$/d'
 }
 
 function startExample() {
@@ -91,17 +167,17 @@ function startExample() {
 
     pushd "$ymlPath" >/dev/null
     case "$exampleName" in
-        [0-9][0-9]) # User gave just the example number
-            candidate=$(ls -1 "$1_"*".yml" 2>/dev/null || true | head -1)
+    [0-9][0-9]) # User gave just the example number
+        candidate=$(ls -1 "$1_"*".yml" 2>/dev/null || true | head -1)
         ;;
-        [0-9][0-9]_*.yml) # Full match
-            candidate=$(ls -1 "$1" 2>/dev/null || true | head -1)
+    [0-9][0-9]_*.yml) # Full match
+        candidate=$(ls -1 "$1" 2>/dev/null || true | head -1)
         ;;
-        [0-9][0-9]_*) # Full name of example (no extension)
-            candidate=$(ls -1 "$1.yml" 2>/dev/null || true | head -1)
+    [0-9][0-9]_*) # Full name of example (no extension)
+        candidate=$(ls -1 "$1.yml" 2>/dev/null || true | head -1)
         ;;
-        *)
-            candidate=$(ls -1 [0-9][0-9]"_$1.yml" 2>/dev/null || true | head -1)
+    *)
+        candidate=$(ls -1 [0-9][0-9]"_$1.yml" 2>/dev/null || true | head -1)
         ;;
     esac
     popd >/dev/null
@@ -121,21 +197,21 @@ function startExample() {
     # docker compose name (docker-compose.yml) so that the behaviour is the same for all
     # all versions. It's also convient for `docker compose down`
     rm -f docker-compose.yml
-    cat "$dcFile" \
-    | sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
-          -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$candidate")"'#g' \
-          -e 's#${OUTPUT_ROOT}#'"$(realpath "$OUTPUT_ROOT/$candidate")"'#g' \
-          -e 's#${PUBLIC_URL_PREFIX}#'"$PUBLIC_URL_PREFIX"'#g' \
-          -e 's#${DEBUG_URL_PREFIX}#'"$DEBUG_URL_PREFIX"'#g' \
-          -e 's#${CLIENT_HOST}#'"$CLIENT_HOST"'#g' \
-          -e 's#${DOCKER_UID}#'"$DOCKER_UID"'#g' \
-          -e 's#${DOCKER_GID}#'"$DOCKER_GID"'#g' \
-    | ( [[ "$runSource" == "false" ]] && awk 'BEGIN {flag=1}/.*\[Start of source\]/{flag=0; next} /.*\[End of source\]/{flag=1; next} flag' || cat ) \
-    >docker-compose.yml
+    cat "$dcFile" |
+        sed -e 's#${LICENSE_FILE}#'"$(realpath "$LICENSE_FILE")"'#g' \
+            -e 's#${LOG_ROOT}#'"$(realpath "$LOG_ROOT/$candidate")"'#g' \
+            -e 's#${OUTPUT_ROOT}#'"$(realpath "$OUTPUT_ROOT/$candidate")"'#g' \
+            -e 's#${PUBLIC_URL_PREFIX}#'"$PUBLIC_URL_PREFIX"'#g' \
+            -e 's#${DEBUG_URL_PREFIX}#'"$DEBUG_URL_PREFIX"'#g' \
+            -e 's#${CLIENT_HOST}#'"$CLIENT_HOST"'#g' \
+            -e 's#${DOCKER_UID}#'"$DOCKER_UID"'#g' \
+            -e 's#${DOCKER_GID}#'"$DOCKER_GID"'#g' |
+        ([[ "$runSource" == "false" ]] && awk 'BEGIN {flag=1}/.*\[Start of source\]/{flag=0; next} /.*\[End of source\]/{flag=1; next} flag' || cat) \
+            >docker-compose.yml
 
     echo "Starting example ${candidate%.*}"
     PUBLIC_URL_PREFIX=$PUBLIC_URL_PREFIX \
-    $dockerComposeCmd up --build --detach
+        $dockerComposeCmd up --build --detach
 
     if [[ "$runSource" == "false" ]]; then
         echo
@@ -146,12 +222,11 @@ function startExample() {
 
     echo "Workflow visualiser URL $DEBUG_URL_PREFIX/visualiser"
     case "$ymlPath" in
-        *"metrics")
-            echo "Grafana URL $GRAFANA_URL/"
-            echo
-            ;;
-        *)
-            ;;
+    *"metrics")
+        echo "Grafana URL $GRAFANA_URL/"
+        echo
+        ;;
+    *) ;;
     esac
     echo
     echo "Output from ${candidate%.*} (ctrl-c to return to shell - this will not kill the containers!)"
@@ -164,7 +239,7 @@ function startExample() {
 function stopExample() {
     local i
     local firstTime=true
-    for i in $(docker ps --all --format '{{.Names}}' | grep -e ^norsk-) ; do
+    for i in $(docker ps --all --format '{{.Names}}' | grep -e ^norsk-); do
         if [ $firstTime == true ]; then
             echo "Stopping example containers:"
             firstTime=false
@@ -174,8 +249,8 @@ function stopExample() {
     done
 
     firstTime=true
-    for i in $(docker network list --format '{{.Name}}' | grep -e ^norsk-nw) ; do
-        if [ $firstTime  == true ]; then
+    for i in $(docker network list --format '{{.Name}}' | grep -e ^norsk-nw); do
+        if [ $firstTime == true ]; then
             echo "Deleting network:"
             firstTime=false
         fi
@@ -187,10 +262,9 @@ function stopExample() {
 function downloadMediaAssets() {
     MEDIA_ASSETS="Weaving.ts Weaving-stereo.ts InkDrop.ts InkDrop-stereo.ts TraditionalMusic.mp4"
 
-    for i in $MEDIA_ASSETS
-    do
+    for i in $MEDIA_ASSETS; do
         if [[ ! -f data/$i ]]; then
-	        curl -q "https://s3.eu-west-1.amazonaws.com/norsk.video/media-examples/data/$i" > "data/$i"
+            curl -q "https://s3.eu-west-1.amazonaws.com/norsk.video/media-examples/data/$i" >"data/$i"
         fi
     done
 }
@@ -199,20 +273,21 @@ function main() {
     local ymlPath
     local dockerComposeCmd
     local addMetrics=false
-    local addTurn=false
+    local addTurn="$TURN_DEFAULT"
     local runSource=true
+
+    read_config
+
+    PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX:-"http://${CLIENT_HOST}:8080"}
+    DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX:-"http://${CLIENT_HOST}:6791"}
+    GRAFANA_URL=${GRAFANA_URL:-"http://${CLIENT_HOST}:3100"}
+
+    ymlPath="docker-compose/$NETWORK_MODE_DEFAULT-networking"
 
     declare -a positionalArguments
     positionalArguments=()
 
-    # Defaults
-    if [[ "$OSTYPE" == "linux"* ]]; then
-        ymlPath="docker-compose/host-networking"
-    else
-        ymlPath="docker-compose/docker-networking"
-        addTurn=true
-    fi
-    LOG_ROOT="norskLogs"
+    LOG_ROOT="$LOG_DEFAULT"
     OUTPUT_ROOT="norskOutput"
 
     if [ "$(id -u)" == "0" ]; then
@@ -222,75 +297,124 @@ function main() {
 
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -h | --help) usage ; exit 0 ;;
-            --license-file)
-                export LICENSE_FILE="$2"
-                shift 2
+        -h | --help)
+            usage
+            exit 0
             ;;
-            --log-root)
-                # Remove trailing slash if present
-                export LOG_ROOT=${2%/}
-                shift 2
+        --log-root)
+            # Remove trailing slash if present
+            export LOG_ROOT=${2%/}
+            shift 2
             ;;
-            --network-mode)
-                if [[ "$OSTYPE" == "linux"* ]]; then
-                  case "$2" in
-                      docker | host) ymlPath="docker-compose/$2-networking" ; shift 2 ;;
-                      *) echo "Unknown network-mode $2"; usage ; exit 1 ;;
-                  esac
-                else
-                    echo "network-mode is unsupported on $OSTYPE"; usage ; exit 1
-                fi
-            ;;
-            --metrics)
+        --network-mode)
+            if [[ "$OSTYPE" == "linux"* ]]; then
                 case "$2" in
-                    true) addMetrics=true ; shift 2 ;;
-                    false) addMetrics=false ; shift 2 ;;
-                    *) echo "Unknown metrics flag $2"; usage ; exit 1 ;;
+                docker | host)
+                    ymlPath="docker-compose/$2-networking"
+                    shift 2
+                    ;;
+                *)
+                    echo "Unknown network-mode $2"
+                    usage
+                    exit 1
+                    ;;
                 esac
+            else
+                echo "network-mode is unsupported on $OSTYPE"
+                usage
+                exit 1
+            fi
             ;;
-            --turn)
-                case "$2" in
-                    true) addTurn=true ; shift 2 ;;
-                    false) addTurn=false ; shift 2 ;;
-                    *) echo "Unknown turn flag $2"; usage ; exit 1 ;;
-                esac
-            ;;
-            --run-source)
-                case "$2" in
-                    true) runSource=true ; shift 2 ;;
-                    false) runSource=false ; shift 2 ;;
-                    *) echo "Unknown run-source flag $2"; usage ; exit 1 ;;
-                esac
-            ;;
-            --uid)
-                DOCKER_UID="$2"
+        --metrics)
+            case "$2" in
+            true)
+                addMetrics=true
                 shift 2
                 ;;
-            --gid)
-                DOCKER_GID="$2"
+            false)
+                addMetrics=false
                 shift 2
                 ;;
-            --) shift ; positionalArguments+=("$@") ; break ;;
-            -*) echo "Error: Unknown option $1" ; usage ; exit 1 ;;
-            *) positionalArguments+=("$1") ; shift ;;
+            *)
+                echo "Unknown metrics flag $2"
+                usage
+                exit 1
+                ;;
+            esac
+            ;;
+        --turn)
+            case "$2" in
+            true)
+                addTurn=true
+                shift 2
+                ;;
+            false)
+                addTurn=false
+                shift 2
+                ;;
+            *)
+                echo "Unknown turn flag $2"
+                usage
+                exit 1
+                ;;
+            esac
+            ;;
+        --run-source)
+            case "$2" in
+            true)
+                runSource=true
+                shift 2
+                ;;
+            false)
+                runSource=false
+                shift 2
+                ;;
+            *)
+                echo "Unknown run-source flag $2"
+                usage
+                exit 1
+                ;;
+            esac
+            ;;
+        --uid)
+            DOCKER_UID="$2"
+            shift 2
+            ;;
+        --gid)
+            DOCKER_GID="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            positionalArguments+=("$@")
+            break
+            ;;
+        -*)
+            echo "Error: Unknown option $1"
+            usage
+            exit 1
+            ;;
+        *)
+            positionalArguments+=("$1")
+            shift
+            ;;
         esac
     done
     set -- "${positionalArguments[@]}"
     if [[ $# -eq 1 ]]; then
         case "$1" in
-            list)
-                listExamples
-                exit 0
+        list)
+            listExamples
+            exit 0
             ;;
-            stop)
-                stopExample
-                exit 0
+        stop)
+            stopExample
+            exit 0
             ;;
-            *)
-                echo "Error: Unknown command $1"
-                usage
-                exit 1
+        *)
+            echo "Error: Unknown command $1"
+            usage
+            exit 1
             ;;
         esac
     fi
@@ -314,18 +438,18 @@ function main() {
 
     if [[ $# -eq 2 ]]; then
         case "$1" in
-            start)
-                downloadMediaAssets
-                echo "Stopping any current example"
-                echo
-                stopExample
-                echo
-                startExample "$2" "$ymlPath" "$runSource"
+        start)
+            downloadMediaAssets
+            echo "Stopping any current example"
+            echo
+            stopExample
+            echo
+            startExample "$2" "$ymlPath" "$runSource"
             ;;
-            *)
-                echo "Error: Unknown command $1"
-                usage
-                exit 1
+        *)
+            echo "Error: Unknown command $1"
+            usage
+            exit 1
             ;;
         esac
     else
