@@ -9,3 +9,6 @@ data/Weaving-stereo.ts
 data/Weaving.ts
 data/TraditionalMusic.mp4
 norskOutput/
+.config
+license.json
+.vscode
