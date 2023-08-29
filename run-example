@@ -187,6 +187,8 @@ function startExample() {
         exit 1
     fi
 
+    candidate=${candidate%.*}
+
     mkdir -p "$LOG_ROOT/$candidate"
     mkdir -p "$OUTPUT_ROOT/$candidate"
 
@@ -209,9 +211,15 @@ function startExample() {
         ([[ "$runSource" == "false" ]] && awk 'BEGIN {flag=1}/.*\[Start of source\]/{flag=0; next} /.*\[End of source\]/{flag=1; next} flag' || cat) \
             >docker-compose.yml
 
-    echo "Starting example ${candidate%.*}"
+    echo "Building..."
+    $dockerComposeCmd build
+
+    echo
+    echo "Starting example $candidate":
+    echo
+
     PUBLIC_URL_PREFIX=$PUBLIC_URL_PREFIX \
-        $dockerComposeCmd up --build --detach
+        $dockerComposeCmd up --detach
 
     if [[ "$runSource" == "false" ]]; then
         echo
