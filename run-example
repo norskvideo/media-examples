@@ -20,10 +20,10 @@ declare NETWORK_MODE_DEFAULT
 
 declare -r LOG_DEFAULT="norskLogs"
 if [[ "$OSTYPE" == "linux"* ]]; then
-    TURN_DEFAULT=false
+    TURN_DEFAULT=none
     NETWORK_MODE_DEFAULT="host"
 else
-    TURN_DEFAULT=true
+    TURN_DEFAULT=local
     NETWORK_MODE_DEFAULT="docker"
 fi
 
@@ -36,7 +36,7 @@ function usage() {
         echo "    --network-mode [docker|host] : whether the example should run in host or docker network mode.  Defaults to $NETWORK_MODE_DEFAULT"
     fi
     echo "    --metrics [true|false] : whether metrics containers are included. Defaults to false"
-    echo "    --turn [true|false] : whether turn containers are included. Defaults to $TURN_DEFAULT"
+    echo "    --turn [none|public|local] : whether stun / turn is configured for WebRTC. See webRtcServerConfig.ts, but 'none' uses no stun / turn, public uses Google's public stun server and local (only supported in docker networking mode) spawns a local instance of coturn. Defaults to $TURN_DEFAULT"
     echo "    --run-source [true|false] : whether a source (or sources) are automatically started.  Defaults to true"
     echo "    --uid <uid> : the UID to run the as.  Defaults to the current user's UID"
     echo "    --gid <gid> : the GID to run the as.  Defaults to the current user's GID"
@@ -203,6 +203,7 @@ function startExample() {
             -e 's#${PUBLIC_URL_PREFIX}#'"$PUBLIC_URL_PREFIX"'#g' \
             -e 's#${DEBUG_URL_PREFIX}#'"$DEBUG_URL_PREFIX"'#g' \
             -e 's#${CLIENT_HOST}#'"$CLIENT_HOST"'#g' \
+            -e 's#${TURN_MODE}#'"$turnMode"'#g' \
             -e 's#${DOCKER_UID}#'"$DOCKER_UID"'#g' \
             -e 's#${DOCKER_GID}#'"$DOCKER_GID"'#g' |
         ([[ "$runSource" == "false" ]] && awk 'BEGIN {flag=1}/.*\[Start of source\]/{flag=0; next} /.*\[End of source\]/{flag=1; next} flag' || cat) \
@@ -272,7 +273,8 @@ function main() {
     local ymlPath
     local dockerComposeCmd
     local addMetrics=false
-    local addTurn="$TURN_DEFAULT"
+    local turnMode="$TURN_DEFAULT"
+    local networkMode="$NETWORK_MODE_DEFAULT"
     local runSource=true
 
     read_config
@@ -309,6 +311,7 @@ function main() {
             if [[ "$OSTYPE" == "linux"* ]]; then
                 case "$2" in
                 docker | host)
+                    local networkMode="$2"
                     ymlPath="docker-compose/$2-networking"
                     shift 2
                     ;;
@@ -343,12 +346,8 @@ function main() {
             ;;
         --turn)
             case "$2" in
-            true)
-                addTurn=true
-                shift 2
-                ;;
-            false)
-                addTurn=false
+            local | none | public)
+                turnMode=$2
                 shift 2
                 ;;
             *)
@@ -431,13 +430,19 @@ function main() {
         ymlPath="$ymlPath"-metrics
     fi
 
-    if [[ "$addTurn" == "true" ]]; then
+    if [[ "$turnMode" == "local" ]]; then
         ymlPath="$ymlPath"-turn
     fi
 
     if [[ $# -eq 2 ]]; then
         case "$1" in
         start)
+            # Make sure we don't have both host networking and local turn requested
+            if [[ "$turnMode" == "local" && "$networkMode" == "host" ]] ; then
+                echo "Local turn servers are only supported in docker networking"
+                usage
+                exit 1
+            fi
             downloadMediaAssets
             echo "Stopping any current example"
             echo

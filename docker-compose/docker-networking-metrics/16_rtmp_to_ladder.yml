@@ -47,7 +47,8 @@ services:
       - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
       - CLIENT_HOST_EXTERNAL=${CLIENT_HOST}
       - CLIENT_HOST_INTERNAL=norsk-example-app
-      
+      - TURN_MODE=${TURN_MODE}
+
     depends_on:
       norsk:
         condition: service_healthy

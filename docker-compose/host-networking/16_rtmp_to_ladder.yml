@@ -16,7 +16,7 @@ services:
       - ./data:/mnt/data
       - ${OUTPUT_ROOT}:/mnt/output
       - ${LOG_ROOT}:/var/log/norsk
-    command: --license-file /mnt/license.json 
+    command: --license-file /mnt/license.json
     shm_size: '2gb'
     # cpuset: "0-15"
   example:
@@ -32,7 +32,8 @@ services:
       - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
       - CLIENT_HOST_EXTERNAL=${CLIENT_HOST}
       - CLIENT_HOST_INTERNAL=127.0.0.1
-      
+      - TURN_MODE=${TURN_MODE}
+
     depends_on:
       norsk:
         condition: service_healthy
