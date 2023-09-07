@@ -65,7 +65,7 @@ export async function main() {
         // And subscribe the multi variant playlist, now that the stream has bitrate
         // metadata
         multiVariantOutput.subscribe([
-          { source: streamMetadataOverride, sourceSelector: selectAV },
+          { source: streamMetadataOverride, sourceSelector: selectPlaylist },
         ]);
       } else if (stats.sampleSizeSeconds === 5 && streamStarted) {
         console.log(`  audio: ${(audio.bitrate / 1000).toFixed(1)}kbps`)
@@ -115,6 +115,6 @@ export async function main() {
     { source: highOutput, sourceSelector: selectPlaylist }
   ])
 
-  console.log(`HLS Multi Variant Playlist: ${multiVariantOutput.playlistUrl}`);
+  console.log(`HLS Multi Variant Playlist: ${multiVariantOutput.url}`);
 }
 

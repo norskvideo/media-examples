@@ -47,14 +47,14 @@ export async function main() {
     "HEADERS > Header Value (*Changes each run):\n ",
     mkToken([audioEncryptionKeyId, videoEncryptionKeyId])
   );
-  console.log();
-  console.log("EXTRA CONFIG:\n ", JSON.stringify({
-    "streaming": {
-      "lowLatencyMode": true,
-      "inaccurateManifestTolerance": 0,
-      "rebufferingGoal": 0.01
-    }
-  }));
+  // console.log();
+  // console.log("EXTRA CONFIG:\n ", JSON.stringify({
+  //   "streaming": {
+  //     "lowLatencyMode": true,
+  //     "inaccurateManifestTolerance": 0,
+  //     "rebufferingGoal": 0.01
+  //   }
+  // }));
 
   const norsk = await Norsk.connect();
 
@@ -109,7 +109,7 @@ export async function main() {
     { source: videoOutput, sourceSelector: selectPlaylist }
   ]);
 
-  console.log("MAIN > Manifest URL:\n ", masterOutput.playlistUrl);
+  console.log("MAIN > Manifest URL:\n ", masterOutput.url);
   console.log();
   audioOutput.url().then(logMediaPlaylist("audio"));
   videoOutput.url().then(logMediaPlaylist("video"));
@@ -291,14 +291,10 @@ export async function obtainKeys(encryptionKeyIds: Multi<string>): Promise<Multi
     if (Array.isArray(nodes)) return nodes;
     return [nodes];
   }
-  function XMLText(node: Element | Text | string | undefined | null): string {
+  function XMLText(node: undefined | null | string | { "#text"?: string }): string {
     if (node === undefined || node === null) return "";
     if (typeof node === "string") return node;
-    if (node instanceof Text) return node.textContent || "";
-    if (node instanceof Element) {
-        const textNode = node.textContent;
-        if (textNode !== null) return textNode;
-    }
+    if (typeof node === "object" && "#text" in node && typeof node["#text"] === "string") return node["#text"];
     return "";
   }
 

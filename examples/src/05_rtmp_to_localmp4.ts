@@ -13,7 +13,7 @@ export async function main() {
     id: "localMp4Output",
     fragmentedFileName: "/mnt/output/norskOutput.fmp4",
     nonfragmentedFileName: "/mnt/output/norskOutput.mp4",
-    onEnd: () => {
+    onClose: () => {
       console.log("Closing Norsk");
       norsk.close();
     },
@@ -30,6 +30,6 @@ export async function main() {
   );
 
   // And close it to write out the non-fragmented file name set in config
-  // (will close norsk via onEnd callback above)
+  // (will close norsk via onClose callback above)
   setTimeout(() => { console.log("Timer expired, closing output"); output.close(); }, 30000);
 }

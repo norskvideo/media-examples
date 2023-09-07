@@ -160,7 +160,7 @@ export async function main() {
           };
           const multiVariantPlaylist = await norsk.output.cmafMultiVariant(settings);
           knownApps[app] = { multiVariant: multiVariantPlaylist, sources: [], webrtc: [], videoInput: [], audioInput: [] };
-          console.log(`HLS Multi Variant Playlist: ${multiVariantPlaylist.playlistUrl}`);
+          console.log(`HLS Multi Variant Playlist: ${multiVariantPlaylist.url}`);
         }
         // Create a single WebRTC output for this new stream
         const webRtcOutput = await norsk.output.whep({

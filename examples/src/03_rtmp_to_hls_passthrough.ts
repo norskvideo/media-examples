@@ -44,7 +44,7 @@ export async function main() {
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
   videoOutput.subscribe([{ source: input, sourceSelector: selectVideo }]);
 
-  console.log(`Multi variant playlist: ${multiVariantOutput.playlistUrl}`);
+  console.log(`Multi variant playlist: ${multiVariantOutput.url}`);
   audioOutput.url().then(logMediaPlaylist("audio"));
   videoOutput.url().then(logMediaPlaylist("video"));
 }

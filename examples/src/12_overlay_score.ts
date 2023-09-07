@@ -3,89 +3,73 @@ import {
   ComposePart,
   Norsk,
   VideoComposeSettings,
-  VideoEncodeRung,
   clientHostExternal,
   selectVideo,
   selectAudio,
   videoToPin,
 } from "@norskvideo/norsk-sdk";
-import { Request, Response } from "express";
+import { default as express, Request, Response } from "express";
 import { webRtcServerConfig } from "./common/webRtcServerConfig";
 
-import express = require("express");
 const app = express();
 const port = 3000;
 
+
 export async function main() {
   runWebServer();
-
   const norsk = await Norsk.connect();
 
-  const input = await norsk.input.rtmpServer({ id: "rtmpInput" });
+  const input1 = await norsk.input.rtmpServer({ id: "rtmpInput" });
+  const input2 = await norsk.input.browser(browserSettings);
+  const compose = await norsk.processor.transform.videoCompose(composeSettings);
+  const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig});
 
-  const host = clientHostExternal();
-  const browserSettings: BrowserInputSettings = {
-    id: "browser",
-    url: `http://${host}:3000/static/overlay-score.html`,
-    resolution: { width: 1280, height: 720 },
-    sourceName: "browserOverlay",
-    frameRate: { frames: 25, seconds: 1 },
-  };
-  const browserInput = await norsk.input.browser(browserSettings);
-
-  const backgroundPart: ComposePart<"background"> = {
-    pin: "background",
-    opacity: 1.0,
-    zIndex: 0,
-    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-    destRect: { x: 0, y: 0, width: 100, height: 100 },
-  };
-  const overlayPart: ComposePart<"overlay"> = {
-    pin: "overlay",
-    opacity: 1.0,
-    zIndex: 1,
-    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-    destRect: { x: 0, y: 0, width: 100, height: 100 },
-  };
-
-  const parts = [backgroundPart, overlayPart];
-
-  const composeSettings: VideoComposeSettings<"background" | "overlay"> = {
-    id: "compose",
-    referenceStream: backgroundPart.pin,
-    outputResolution: { width: 1280, height: 720 },
-    referenceResolution: { width: 100, height: 100 },
-    outputPixelFormat: "bgra",
-    parts,
-  };
-  const overlay = await norsk.processor.transform.videoCompose(composeSettings);
-
-  overlay.subscribeToPins([
-    {
-      source: input,
-      sourceSelector: videoToPin("background"),
-    },
-    {
-      source: browserInput,
-      sourceSelector: videoToPin("overlay"),
-    },
+  compose.subscribeToPins([
+    { source: input1, sourceSelector: videoToPin(background.pin) },
+    { source: input2, sourceSelector: videoToPin(overlay.pin) },
   ]);
 
-  const encode = await norsk.processor.transform.videoEncode({
-    id: "ladder1",
-    rungs: [mkRung("high", 854, 480, 800000)],
-  });
-  encode.subscribe([{ source: overlay, sourceSelector: selectVideo }]);
-
-const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
-
   output.subscribe([
-    { source: encode, sourceSelector: selectVideo },
-    { source: input, sourceSelector: selectAudio },
+    { source: compose, sourceSelector: selectVideo },
+    { source: input1, sourceSelector: selectAudio },
   ]);
 
   console.log(`WebRTC Player URL: ${output.playerUrl}`);
 }
+
+const host = clientHostExternal();
+const browserSettings: BrowserInputSettings = {
+  id: "browser",
+  url: `http://${host}:3000/static/overlay-score.html`,
+  resolution: { width: 1280, height: 720 },
+  sourceName: "browserOverlay",
+  frameRate: { frames: 25, seconds: 1 },
+};
+const background: ComposePart<"background"> = {
+  pin: "background",
+  opacity: 1.0,
+  zIndex: 0,
+  sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+  destRect: { x: 0, y: 0, width: 100, height: 100 },
+};
+const overlay: ComposePart<"overlay"> = {
+  pin: "overlay",
+  opacity: 1.0,
+  zIndex: 1,
+  sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+  destRect: { x: 0, y: 0, width: 100, height: 100 },
+};
+
+const parts = [background, overlay];
+const composeSettings: VideoComposeSettings<"background" | "overlay"> = {
+  id: "compose",
+  referenceStream: background.pin,
+  outputResolution: { width: 1280, height: 720 },
+  referenceResolution: { width: 100, height: 100 },
+  outputPixelFormat: "bgra",
+  parts,
+};
+
 
 function runWebServer() {
   const scoreboard = {
@@ -110,28 +94,5 @@ function runWebServer() {
 You'll find the score overlay in http://${host}:${port}/static/overlay-score.html
 and the UI for updating the score in http://${host}:${port}/static/overlay-ui.html`);
   });
-}
-
-function mkRung(
-  name: string,
-  width: number,
-  height: number,
-  bitrate: number
-): VideoEncodeRung {
-  return {
-    name,
-    width,
-    height,
-    frameRate: { frames: 25, seconds: 1 },
-    codec: {
-      type: "x264",
-      bitrateMode: { value: bitrate, mode: "abr" },
-      keyFrameIntervalMax: 50,
-      keyFrameIntervalMin: 50,
-      sceneCut: 0,
-      bframes: 0,
-      tune: "zerolatency",
-    },
-  };
 }
 

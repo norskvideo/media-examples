@@ -31,10 +31,15 @@ export async function input_to_ladder(norsk: Norsk, input: RtmpServerInputNode |
   const mediumOutput = await norsk.output.cmafVideo({ id: "medium", destinations, ...segmentSettings });
   const lowOutput = await norsk.output.cmafVideo({ id: "low", destinations, ...segmentSettings });
 
+  const streamMetadataOverride = await norsk.processor.transform.streamMetadataOverride({
+    id: "setBitrate",
+    audio: { bitrate: 20_000 },
+  });
+
   highOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("high") }]);
   mediumOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("medium") }]);
   lowOutput.subscribe([{ source: abrLadder, sourceSelector: ladderItem("low") }]);
-  audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
+  audioOutput.subscribe([{ source: streamMetadataOverride, sourceSelector: selectAudio }]);
 
   multiVariantOutput.subscribe([
     { source: highOutput, sourceSelector: selectPlaylist },
@@ -42,8 +47,6 @@ export async function input_to_ladder(norsk: Norsk, input: RtmpServerInputNode |
     { source: lowOutput, sourceSelector: selectPlaylist },
     { source: audioOutput, sourceSelector: selectPlaylist },
   ]);
-
-  console.log(`HLS Multi Variant Playlist: ${multiVariantOutput.playlistUrl}`);
 
   const localRtcOutput = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
   localRtcOutput.subscribe([
@@ -59,6 +62,8 @@ export async function input_to_ladder(norsk: Norsk, input: RtmpServerInputNode |
   console.log(`WebRTC Player URL: ${localRtcOutput.playerUrl}`);
 
   abrLadder.subscribe([{ source: input, sourceSelector: selectVideo }]);
+  streamMetadataOverride.subscribe([{ source: input, sourceSelector: selectAudio }])
+  console.log(`HLS Multi Variant Playlist: ${multiVariantOutput.url}`);
 }
 
 const segmentSettings = {

@@ -185,7 +185,7 @@ export async function main() {
     { source: audioOutput, sourceSelector: selectPlaylist },
   ]);
 
-  console.log(`HLS Multi Variant Playlist: ${multiVariantOutput.playlistUrl}`);
+  console.log(`HLS Multi Variant Playlist: ${multiVariantOutput.url}`);
 }
 function webRtcServerConfig(): WebRTCBrowserSettings {
   return (process.env.TURN_INTERNAL && process.env.TURN_EXTERNAL) ?
