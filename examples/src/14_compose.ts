@@ -87,12 +87,13 @@ export async function main() {
   const mixerSettings: AudioMixSettings<"input1" | "input2"> = {
     id: "mixer",
     onError: (err) => console.log("MIXER ERR", err),
+    channelLayout: "stereo",
     sampleRate: 48000,
     sources: [
       { pin: "input1" },
       { pin: "input2" }
     ],
-    outputSource: "output",
+    outputSource: "output"
   };
 
   const mixer = await norsk.processor.transform.audioMix(mixerSettings);

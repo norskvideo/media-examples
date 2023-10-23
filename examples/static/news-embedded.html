@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Chart with People and Ticker Tape (1280x720)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      width: 1280px;
+      height: 720px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart {
+      width: 100%;
+      height: 300px;
+      background-color: #eaf7ff;
+      margin-bottom: 20px;
+      /* Add your sales chart background here */
+      /* Example: background-image: url('path/to/sales-chart.png'); */
+      background-size: cover;
+    }
+
+    .people-container {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .person {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      background-color: transparent; /* Set the background color to transparent */
+    }
+
+    .person img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    /* Ticker Tape */
+    .ticker-tape-container {
+      width: 100%;
+      height: 40px;
+      overflow: hidden;
+    }
+
+    .ticker-tape {
+      display: inline-block;
+      white-space: nowrap;
+      animation: ticker 20s linear infinite;
+    }
+
+    @keyframes ticker {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="chart"></div>
+    <div class="people-container">
+      <div class="person">
+        <img src="person1.png" alt="Person 1">
+        <span>Person 1</span>
+      </div>
+      <div class="person">
+        <img src="person2.png" alt="Person 2">
+        <span>Person 2</span>
+      </div>
+    </div>
+    <div class="ticker-tape-container">
+      <div class="ticker-tape">
+        <!-- Add your scrolling news content here -->
+        <span>Breaking News: Lorem ipsum dolor sit amet, consectetur adipiscing elit.</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

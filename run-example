@@ -2,6 +2,8 @@
 set -eo pipefail
 cd "${0%/*}"
 
+shopt -s globstar
+
 declare LOG_ROOT
 declare LICENSE_FILE
 
@@ -145,7 +147,7 @@ read_config() {
 }
 
 function listExamples() {
-    cat docker-compose/host-networking/*yml |
+    cat docker-compose/host-networking/**/*yml |
         grep -e '^#' |
         sed -e 's/# Norsk Media example: //' \
             -e 's/#/ /' \
@@ -165,23 +167,31 @@ function startExample() {
     fi
 
     pushd "$ymlPath" >/dev/null
-    case "$exampleName" in
-    [0-9][0-9]) # User gave just the example number
-        candidate=$(ls -1 "$1_"*".yml" 2>/dev/null || true | head -1)
-        ;;
-    [0-9][0-9]_*.yml) # Full match
-        candidate=$(ls -1 "$1" 2>/dev/null || true | head -1)
-        ;;
-    [0-9][0-9]_*) # Full name of example (no extension)
-        candidate=$(ls -1 "$1.yml" 2>/dev/null || true | head -1)
-        ;;
-    *)
-        candidate=$(ls -1 [0-9][0-9]"_$1.yml" 2>/dev/null || true | head -1)
-        ;;
-    esac
+
+    readarray -t files < <(find . -type f)
+    local matches=()
+
+    for file in "${files[@]}"; do
+        if [[ "$file" =~ $exampleName ]]; then
+            matches+=(${file#./})
+        fi
+    done
+
+    if [ ${#matches[@]} -eq 0 ]; then
+        echo "Error: unknown example '$exampleName'"
+        exit 1
+    fi
+    if [ ${#matches[@]} -gt 1 ]; then
+        echo "Error: '$exampleName' is ambiguous, I found: ${matches[@]}"
+        exit 1
+    fi
+
+    candidate=${matches[0]}
+
     popd >/dev/null
 
     local -r dcFile="$ymlPath/$candidate"
+
     if [ ! -f "$dcFile" ]; then
         echo "Error: example not found $exampleName"
         exit 1
@@ -451,7 +461,7 @@ function main() {
                 usage
                 exit 1
             fi
-            downloadMediaAssets
+#            downloadMediaAssets
             echo "Stopping any current example"
             echo
             stopExample

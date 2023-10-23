@@ -80,12 +80,18 @@ export async function main() {
       { pin: "comms" }
     ],
     outputSource: "source",
+    channelLayout: "stereo"
   };
   const mixer = await norsk.processor.transform.audioMix(mixerSettings);
   mixer.subscribeToPins([
     { source: input, sourceSelector: audioToPin('source') },
     { source: previewRtc, sourceSelector: audioToPin('comms') }
   ]);
+  const whep2 = await norsk.output.whep({id: "duplexOut", ...webRtcServerConfig});
+
+  whep2.subscribe([{source: previewRtc, sourceSelector: selectVideo}]);
+  console.log(`Commentary Whep client: ${whep2.playerUrl}`);
+
 
   const finalLadder: VideoEncodeRung[] = [
     {

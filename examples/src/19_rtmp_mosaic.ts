@@ -43,7 +43,7 @@ class Mosaic {
       port: 1935,
       onConnection: this.onConnection.bind(this),
       onStream: this.onStream.bind(this),
-      onConnectionStatusChange: this.onConnectionStatusChange.bind(this)
+      onConnectionStatusChange: this.onConnectionStatusChange.bind(this),
     });
   }
 
@@ -55,7 +55,13 @@ class Mosaic {
     }
   }
 
-  onStream(_cid: string, _app: string, _url: string, _streamId: number, publishingName: string): OnStreamResult {
+  onStream(
+    _cid: string,
+    _app: string,
+    _url: string,
+    _streamId: number,
+    publishingName: string
+  ): OnStreamResult {
     this.streams.push(publishingName);
     this.handleStreamChange();
 
@@ -72,7 +78,11 @@ class Mosaic {
     };
   }
 
-  onConnectionStatusChange(_cid: string, status: string, streamKeys: RtmpServerStreamKeys) {
+  onConnectionStatusChange(
+    _cid: string,
+    status: string,
+    streamKeys: RtmpServerStreamKeys
+  ) {
     if (status !== "disconnected") {
       // "I only know about one state";
       return;
@@ -86,7 +96,11 @@ class Mosaic {
   }
 
   handleStreamChange() {
-    if (this.compose === undefined && this.streams.length > 0 && !this.composeCreatePending) {
+    if (
+      this.compose === undefined &&
+      this.streams.length > 0 &&
+      !this.composeCreatePending
+    ) {
       this.composeCreatePending = true;
       this.norsk.processor.transform
         .videoCompose({
@@ -115,10 +129,25 @@ class Mosaic {
 
           const encode = await this.norsk.processor.transform.videoEncode({
             id: "ladder1",
-            rungs: [mkRung("high", 854, 480, 800000)]
+            rungs: [mkRung("high", 854, 480, 800)],
           });
           encode.subscribe([
             { source: this.compose, sourceSelector: videoStreamKeys },
+          ]);
+
+          const override =
+            await this.norsk.processor.transform.streamKeyOverride({
+              id: "normalise",
+              streamKey: {
+                programNumber: 1,
+                sourceName: "output",
+                renditionName: "high",
+                streamId: 256,
+              },
+            });
+
+          override.subscribe([
+            { source: encode, sourceSelector: videoStreamKeys },
           ]);
 
           const output = await this.norsk.output.hlsTsVideo({
@@ -127,24 +156,22 @@ class Mosaic {
             destinations: [{ type: "local", retentionPeriodSeconds: 60 }],
           });
           output.subscribe([
-            { source: encode, sourceSelector: videoStreamKeys },
+            { source: override, sourceSelector: videoStreamKeys },
           ]);
-          console.log(
-            "Media playlist",
-            "http://localhost:8080/cmaf/file/stream/source1/1/2/high/norsk.m3u8"
-          );
 
           const rtcOutput = await this.norsk.output.whep({ id: "webrtc" });
           rtcOutput.subscribe([
-            { source: encode, sourceSelector: videoStreamKeys },
+            { source: override, sourceSelector: videoStreamKeys },
             { source: this.audioSignalInput, sourceSelector: audioStreamKeys },
           ]);
+
+          let url = await output.url();
+          console.log("Media playlist", `${url}`);
           console.log("WebRTC Player URL: " + rtcOutput.playerUrl);
         });
     } else if (this.compose != undefined && this.streams.length > 0) {
       this.compose?.updateConfig({ parts: createParts(this.streams) });
-    }
-    else if (this.streams.length > 0) {
+    } else if (this.streams.length > 0) {
       setInterval(this.handleStreamChange.bind(this), 500);
     }
   }
@@ -176,7 +203,12 @@ function audioInputSettings(): AudioSignalGeneratorSettings {
   };
 }
 
-function mkRung(name: string, width: number, height: number, bitrate: number): VideoEncodeRung {
+function mkRung(
+  name: string,
+  width: number,
+  height: number,
+  bitrate: number
+): VideoEncodeRung {
   return {
     name,
     width,

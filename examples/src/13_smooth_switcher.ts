@@ -43,7 +43,9 @@ export async function main() {
     mode: "listener",
     sourceName: "camera2",
   };
-  const streamSwitchSmoothSettings: StreamSwitchSmoothSettings<"camera1" | "camera2"> = {
+  const streamSwitchSmoothSettings: StreamSwitchSmoothSettings<
+    "camera1" | "camera2"
+  > = {
     id: "switcher",
     activeSource: "camera1",
     outputSource: "output",
@@ -55,19 +57,28 @@ export async function main() {
   const norsk = await Norsk.connect();
   const camera1 = await norsk.input.srt(srtCamera1);
   const camera2 = await norsk.input.srt(srtCamera2);
-  const streamSwitchSmooth = await norsk.processor.control.streamSwitchSmooth(streamSwitchSmoothSettings);
-  const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
+
+  const streamSwitchSmooth = await norsk.processor.control.streamSwitchSmooth(
+    streamSwitchSmoothSettings
+  );
+  const ladder = await norsk.processor.transform.videoEncode({
+    id: "ladder",
+    rungs: ladderRungs,
+  });
+
+  const output = await norsk.output.whep({
+    id: "webrtc",
+    ...webRtcServerConfig,
+  });
 
   streamSwitchSmooth.subscribeToPins([
     { source: camera1, sourceSelector: avToPin("camera1") },
     { source: camera2, sourceSelector: avToPin("camera2") },
   ]);
 
-  const ladder = await norsk.processor.transform.videoEncode({
-    id: "ladder",
-    rungs: ladderRungs,
-  });
-  ladder.subscribe([{ source: streamSwitchSmooth, sourceSelector: selectVideo }]);
+  ladder.subscribe([
+    { source: streamSwitchSmooth, sourceSelector: selectVideo },
+  ]);
 
   output.subscribe([
     { source: ladder, sourceSelector: selectVideo },
@@ -75,6 +86,7 @@ export async function main() {
   ]);
 
   const app = express();
+  app.set("view engine", "ejs");
   const port = 3000;
   const host = clientHostExternal();
   app.use(express.json());
@@ -86,23 +98,11 @@ export async function main() {
       res.sendStatus(404);
     }
   });
-  app.get("/", (req: Request, res: Response) => {
-    res.send(`
-  <link rel="stylesheet" href="/static/doodle.css" type="text/css">
-  <link rel="stylesheet" href="/static/font.css" type="text/css">
-  <script>
-    function swap(source) {
-      fetch("/switch/" + source, { method: "PUT" })
-    }
-  </script>
-  <body class="doodle">
-    <p>
-      <button class="my-button" onclick="swap('camera1'); return false" style="font-size: 35">Camera 1</button>
-      <button class="my-button" onclick="swap('camera2'); return false" style="font-size: 35">Camera 2</button>
-    </p>
-    <iframe width=1280 height=720 frameBorder="0" src="${output.playerUrl}"></iframe>
-  </body>
-  `);
+  app.get("/", (_req: Request, res: Response) => {
+    const vars = {
+      playerUrl: output.playerUrl,
+    };
+    res.render("13_view", vars);
   });
   app.use("/static", express.static("static"));
   app.listen(port, () => {

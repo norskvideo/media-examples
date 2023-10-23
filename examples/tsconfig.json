@@ -9,7 +9,7 @@
     "noImplicitAny": true,
     "outDir": "lib",
     "sourceMap": true,
-    "sourceRoot": "src",
+    "sourceRoot": "./",
     "strict": true,
     "strictFunctionTypes": true,
     "strictNullChecks": true,
