@@ -4,6 +4,7 @@ import {
   Norsk,
   VideoComposeSettings,
   clientHostExternal,
+  clientHostInternal,
   selectVideo,
   selectAudio,
   videoToPin,
@@ -37,10 +38,9 @@ export async function main() {
   console.log(`WebRTC Player URL: ${output.playerUrl}`);
 }
 
-const host = clientHostExternal();
 const browserSettings: BrowserInputSettings = {
   id: "browser",
-  url: `http://${host}:3000/static/overlay-score.html`,
+  url: `http://${clientHostInternal()}:3000/static/overlay-score.html`,
   resolution: { width: 1280, height: 720 },
   sourceName: "browserOverlay",
   frameRate: { frames: 25, seconds: 1 },
