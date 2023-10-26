@@ -2,8 +2,6 @@
 set -eo pipefail
 cd "${0%/*}"
 
-shopt -s globstar
-
 declare LOG_ROOT
 declare LICENSE_FILE
 
@@ -147,7 +145,7 @@ read_config() {
 }
 
 function listExamples() {
-    cat docker-compose/host-networking/**/*yml |
+    find docker-compose/host-networking -name \*yml | xargs cat |
         grep -e '^#' |
         sed -e 's/# Norsk Media example: //' \
             -e 's/#/ /' \
@@ -160,6 +158,8 @@ function startExample() {
     local -r runSource=${3}
     local -r dockerComposeCmd=$(dockerComposeCmd)
     local candidate
+    local -a matches=()
+    local file
 
     if [ -z "$dockerComposeCmd" ]; then
         echo "Error: Unable to find docker-compose - exiting"
@@ -168,10 +168,7 @@ function startExample() {
 
     pushd "$ymlPath" >/dev/null
 
-    readarray -t files < <(find . -type f)
-    local matches=()
-
-    for file in "${files[@]}"; do
+    for file in $(find . -name \*yml -type f); do
         if [[ "$file" =~ $exampleName ]]; then
             matches+=(${file#./})
         fi
