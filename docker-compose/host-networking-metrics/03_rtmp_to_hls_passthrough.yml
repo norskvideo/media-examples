@@ -8,7 +8,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v1.0.341-main
+    image: norskvideo/norsk:v1.0.343-main
     network_mode: host
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
@@ -33,6 +33,11 @@ services:
       - CLIENT_HOST_EXTERNAL=${CLIENT_HOST}
       - CLIENT_HOST_INTERNAL=127.0.0.1
       - TURN_MODE=${TURN_MODE}
+      - EZDRM_TOKEN
+      - EZDRM_USERNAME
+      - EZDRM_PASSWORD
+      - EZDRM_WV_PX
+      - EZDRM_PR_PX
       
     depends_on:
       norsk:
@@ -50,7 +55,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts -vcodec copy -acodec copy -f flv 'rtmp://127.0.0.1:1935/norsk/default'
+        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts  -vcodec copy -codec copy -f flv 'rtmp://127.0.0.1:1935/norsk/default'
     depends_on:
       - example
   # [End of source]

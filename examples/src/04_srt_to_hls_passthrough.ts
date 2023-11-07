@@ -25,7 +25,7 @@ export async function main() {
 
   const audioOutput = await norsk.output.cmafAudio({ id: "audio", ...segmentSettings });
   const videoOutput = await norsk.output.cmafVideo({ id: "video", ...segmentSettings });
-  const multiVariantOutput = await norsk.output.cmafMultiVariant({ id: "multi-variant", playlistName: "multi-variant", destinations });
+  const mvOutput = await norsk.output.cmafMultiVariant({ id: "multi-variant", playlistName: "multi-variant", destinations });
 
   const streamMetadataOverride = await norsk.processor.transform.streamMetadataOverride({
     id: "setBitrate",
@@ -38,14 +38,14 @@ export async function main() {
     { source: videoOutput, sourceSelector: selectPlaylist },
   ]);
 
-  multiVariantOutput.subscribe([
+  mvOutput.subscribe([
     { source: streamMetadataOverride, sourceSelector: selectPlaylist }
   ]);
 
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
   videoOutput.subscribe([{ source: input, sourceSelector: selectVideo }]);
 
-  console.log(`Multi variant playlist: ${multiVariantOutput.url}`);
+  console.log(`Multi variant playlist: ${mvOutput.url}`);
   audioOutput.url().then(logMediaPlaylist("audio"));
   videoOutput.url().then(logMediaPlaylist("video"));
 }

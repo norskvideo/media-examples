@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presenter Video and Slide Presentation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: transparent;
+            font-family: Arial, sans-serif;
+        }
+
+
+        .white-border {
+            position: absolute;
+            margin: 2em;
+            /* Set transparent div to 25% of the width of the parent container */
+            height: 384px;
+            width: 216px;
+            top: 1em;
+            left: 1em;
+            bottom: 1em;
+            right: 1em;
+            /* Occupy the entire height of the video container */
+            border-radius: 20px;
+            background-color: transparent;
+            outline: 2em solid red
+        }
+
+        .video-container {
+            /* position: absolute; */
+            width: 216px;
+            height: 384px;
+            top: 1em;
+            left: 1em;
+            bottom: 1em;
+            right: 1em;
+
+            border-radius: 20px;
+            background-color:  rgba(0, 0, 0, 0);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 1);
+        }
+
+        .frame {
+            width: 216px;
+            height: 384px;
+            /* width: 242px;
+            height: 420px; */
+            border: 3px solid #ccc;
+            background: #eee;
+            margin: 0;
+            padding: 15px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <div class="frame">
+            <div class="video-container">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
