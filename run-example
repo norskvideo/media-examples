@@ -60,7 +60,7 @@ function usage() {
     echo "    NORSK_GID - the value of --gid can alternatively be provided using this environment variable"
     echo
     echo "For example:"
-    echo "./run-example --license-file license.json start rtmp_to_hls"
+    echo "./run-example start rtmp_to_hls"
     echo "LICENSE_FILE=license.json ./run-example start rtmp_to_hls"
     echo
 }
@@ -458,7 +458,7 @@ function main() {
                 usage
                 exit 1
             fi
-#            downloadMediaAssets
+            downloadMediaAssets
             echo "Stopping any current example"
             echo
             stopExample
