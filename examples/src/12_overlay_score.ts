@@ -40,7 +40,7 @@ export async function main() {
 
 const browserSettings: BrowserInputSettings = {
   id: "browser",
-  url: `http://${clientHostInternal()}:3000/static/overlay-score.html`,
+  url: `http://${clientHostInternal()}:${port}/static/overlay-score.html`,
   resolution: { width: 1280, height: 720 },
   sourceName: "browserOverlay",
   frameRate: { frames: 25, seconds: 1 },

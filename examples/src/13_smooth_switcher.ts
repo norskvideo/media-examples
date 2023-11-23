@@ -51,6 +51,8 @@ export async function main() {
     outputSource: "output",
     outputResolution: { width: 1280, height: 720 },
     transitionDurationMs: 500.0,
+    frameRate: { frames: 25, seconds: 1 },
+    channelLayout: "stereo",
     sampleRate: 48000,
   };
 
