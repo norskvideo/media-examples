@@ -8,7 +8,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v1.0.347-main
+    image: norskvideo/norsk:v1.0.348-main
     network_mode: host
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
@@ -43,22 +43,6 @@ services:
       norsk:
         condition: service_healthy
     command: node -e 'require("./lib/src/07_audio_signal").main()'
-  # [Start of source]
-  source:
-    container_name: norsk-source
-    image: datarhei/ffmpeg
-    network_mode: host
-    entrypoint: ["/bin/sh","-c"]
-    user: "${DOCKER_UID}:${DOCKER_GID}"
-    volumes:
-      - ./data:/tmp/data:ro
-    command:
-    - |
-        sleep 1
-        
-    depends_on:
-      - example
-  # [End of source]
   prometheus:
     container_name: norsk-prometheus
     image: prom/prometheus:latest

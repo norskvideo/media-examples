@@ -1,4 +1,4 @@
-import { Norsk, selectAV } from "@norskvideo/norsk-sdk"
+import { Norsk, requireAV, selectAV } from "@norskvideo/norsk-sdk"
 
 export async function main() {
   const norsk = await Norsk.connect({
@@ -19,7 +19,7 @@ export async function main() {
     },
   });
 
-  output.subscribe([{ source: input, sourceSelector: selectAV }]);
+  output.subscribe([{ source: input, sourceSelector: selectAV }], requireAV);
 
   // We can write non-fragmented snapshots periodically
   let i = 0;
