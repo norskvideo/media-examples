@@ -27,7 +27,7 @@ export async function main() {
 
   const audioOutput = await norsk.output.cmafAudio({ id: "audio", ...segmentSettings });
   const videoOutput = await norsk.output.cmafVideo({ id: "video", ...segmentSettings });
-  const mvOutput    = await norsk.output.cmafMultiVariant({
+  const mvOutput = await norsk.output.cmafMultiVariant({
     id: "multi-variant", playlistName: "multi-variant", destinations
   });
 
@@ -35,8 +35,8 @@ export async function main() {
   videoOutput.subscribe([{ source: input, sourceSelector: selectVideo }]);
 
   mvOutput.subscribe([
-        { source: audioOutput, sourceSelector: selectPlaylist },
-        { source: videoOutput, sourceSelector: selectPlaylist }
+    { source: audioOutput, sourceSelector: selectPlaylist },
+    { source: videoOutput, sourceSelector: selectPlaylist }
   ]);
 
 
@@ -69,7 +69,7 @@ export async function main() {
 }
 
 const destinations: CmafDestinationSettings[] =
-  [{ type: "local", retentionPeriodSeconds: 10 }]
+  [{ type: "local", retentionPeriodSeconds: 10, id: "local" }]
 
 const segmentSettings: CmafOutputSettings = {
   partDurationSeconds: 1.0,

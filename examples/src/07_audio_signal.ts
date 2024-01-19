@@ -25,5 +25,5 @@ const hlsAudioSettings: CmafOutputSettings = {
   id: "hls-audio",
   partDurationSeconds: 1.0,
   segmentDurationSeconds: 4.0,
-  destinations: [{ type: "local", retentionPeriodSeconds: 60 }],
+  destinations: [{ type: "local", retentionPeriodSeconds: 60, id: "local" }],
 };

@@ -153,7 +153,7 @@ class Mosaic {
           const output = await this.norsk.output.hlsTsVideo({
             id: "video",
             segmentDurationSeconds: 4.0,
-            destinations: [{ type: "local", retentionPeriodSeconds: 60 }],
+            destinations: [{ type: "local", retentionPeriodSeconds: 60, id: "local" }],
           });
           output.subscribe([
             { source: override, sourceSelector: videoStreamKeys },

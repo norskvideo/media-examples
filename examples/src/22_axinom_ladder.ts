@@ -10,7 +10,7 @@ import * as cpix from "./common/cpix";
 import * as axinom from "./common/axinom";
 
 const destinations: CmafDestinationSettings[] = [
-  { type: "local", retentionPeriodSeconds: 60 },
+  { type: "local", retentionPeriodSeconds: 60, id: "local" },
 ];
 const segmentSettings: CmafOutputSettings = {
   partDurationSeconds: 1.0,

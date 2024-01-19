@@ -84,7 +84,7 @@ export async function main() {
     { source: srtAacInput, sourceSelector: selectAV },
   ]);
 
-  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10, id: "local" }]
 
   const multiVariantPlaylistSettings = { id: "multi-variant", playlistName: "multi-variant", destinations };
   const audio = {

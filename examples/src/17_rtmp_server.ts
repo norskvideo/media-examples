@@ -150,7 +150,7 @@ export async function main() {
 
       console.log("Got RTMP stream", app, url, streamId, publishingName);
       const onStream = async () => {
-        const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+        const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10, id: "local" }]
         // Register this app if we've not seen it before, and start up a multi variant playlist for it
         if (!knownApps[app]) {
           const settings: CmafMultiVariantOutputSettings = {

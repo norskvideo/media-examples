@@ -17,7 +17,7 @@ import * as cpix from "./common/cpix";
 import * as ezdrm from "./common/ezDrmCrypto";
 
 const destinations: CmafDestinationSettings[] = [
-  { type: "local", retentionPeriodSeconds: 60 },
+  { type: "local", retentionPeriodSeconds: 60, id: "local" },
 ];
 const segmentSettings: CmafOutputSettings = {
   partDurationSeconds: 1.0,
@@ -50,12 +50,12 @@ export async function main(): Promise<void> {
   console.log(
     "   DRM > Custom License Server URL:\n ",
     "https://widevine-dash.ezdrm.com/widevine-php/widevine-foreignkey.php?pX=" +
-      (process.env["EZDRM_WV_PX"] || "$EZDRM_WV_PX")
+    (process.env["EZDRM_WV_PX"] || "$EZDRM_WV_PX")
   );
   console.log(
     "   OR\n ",
     "https://playready.ezdrm.com/cency/preauth.aspx?pX=" +
-      (process.env["EZDRM_PR_PX"] || "$EZDRM_PR_PX")
+    (process.env["EZDRM_PR_PX"] || "$EZDRM_PR_PX")
   );
   console.log();
 

@@ -51,7 +51,7 @@ export async function main() {
 }
 
 const destinations: CmafDestinationSettings[] =
-  [{ type: "local", retentionPeriodSeconds: 10 }]
+  [{ type: "local", retentionPeriodSeconds: 10, id: "local" }]
 
 const segmentSettings: CmafOutputSettings = {
   partDurationSeconds: 1.0,

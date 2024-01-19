@@ -6,7 +6,7 @@ import { mkCmafOutputs, mkWhepOutputs } from "./common/mkOutputs";
 const segmentSettings: CmafOutputSettings = {
   partDurationSeconds: 1.0,
   segmentDurationSeconds: 4.0,
-  destinations: [{ type: "local", retentionPeriodSeconds: 60 }],
+  destinations: [{ type: "local", retentionPeriodSeconds: 60, id: "local" }],
 };
 const cmafSettings = { id: "multi-variant", segmentSettings };
 const whepSettings = { idRoot: "whepRoot", webRtcServerConfig };
