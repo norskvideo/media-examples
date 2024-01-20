@@ -1,11 +1,11 @@
 import {
   CmafDestinationSettings,
+  CmafOutputSettings,
   Norsk,
   SrtInputSettings,
   selectAudio,
   selectVideo,
   selectPlaylist,
-  CmafOutputSettings,
 } from "@norskvideo/norsk-sdk";
 
 export async function main() {
@@ -43,7 +43,7 @@ export async function main() {
 const destinations: CmafDestinationSettings[] =
   [{ id: "local", type: "local", retentionPeriodSeconds: 10 }];
 
-  const segmentSettings: CmafOutputSettings = {
+const segmentSettings: CmafOutputSettings = {
   partDurationSeconds: 1.0,
   segmentDurationSeconds: 4.0,
   destinations

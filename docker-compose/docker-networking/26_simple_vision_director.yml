@@ -71,7 +71,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/Weaving-stereo.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5001?pkt_size=1316{{ffmpeg}}streamid=camera1'
+        ffmpeg -v error -re -stream_loop -1 -i data/Weaving-stereo.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5001?pkt_size=1316&streamid=camera1'
     depends_on:
       - example
     networks:
@@ -88,7 +88,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop-stereo.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5002?pkt_size=1316{{ffmpeg}}streamid=camera2'
+        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop-stereo.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5002?pkt_size=1316&streamid=camera2'
     depends_on:
       - example
     networks:
