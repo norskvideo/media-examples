@@ -64,9 +64,9 @@ export async function main() {
 
         // And subscribe the multi variant playlist, now that the stream has bitrate
         // metadata
-        multiVariantOutput.subscribe([
-          { source: streamMetadataOverride, sourceSelector: selectPlaylist },
-        ]);
+        // multiVariantOutput.subscribe([
+        //   { source: streamMetadataOverride, sourceSelector: selectPlaylist },
+        // ]);
       } else if (stats.sampleSizeSeconds === 5 && streamStarted) {
         console.log(`  audio: ${(audio.bitrate / 1000).toFixed(1)}kbps`)
         console.log(`  video: ${(video.bitrate / 1000).toFixed(1)}kbps`);

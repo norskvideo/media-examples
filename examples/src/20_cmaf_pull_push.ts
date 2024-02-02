@@ -11,7 +11,7 @@ export async function main() {
   const input = await norsk.input.rtmpServer({ id: "rtmpInput" });
 
   const destinations: CmafDestinationSettings[] = [
-    { type: "local", retentionPeriodSeconds: 10, id: "local" },
+    { type: "local", retentionPeriodSeconds: 60, id: "local" },
     { type: "generic", id: "genericPullPush", host: "localhost", port, pathPrefix: "/push/", retentionPeriodSeconds: 60 }
   ]
 
