@@ -61,7 +61,7 @@ const hlsAudioSettings: CmafOutputSettings = {
   id: "hls-audio",
   partDurationSeconds: 1.0,
   segmentDurationSeconds: 4.0,
-  destinations: [{ type: "local", retentionPeriodSeconds: 60 }],
+  destinations: [{ type: "local", retentionPeriodSeconds: 60, id: "local" }],
 };
 
 const rtpInputSettings: RtpInputSettings = {
@@ -73,7 +73,7 @@ const rtpInputSettings: RtpInputSettings = {
       ip: "0.0.0.0",
       rtpPort: 5001,
       rtcpPort: 5002,
-      iface: "any",
+      interface: "any",
       streamId: 1,
       streamType: {
         kind: "linearpcm",

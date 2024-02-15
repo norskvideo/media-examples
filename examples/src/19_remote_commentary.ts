@@ -148,7 +148,7 @@ export async function main() {
     rungs: finalLadder,
   });
   finalEncode.subscribe([{ source: input, sourceSelector: selectVideo }]);
-  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10, id: "local" }]
   const multiVariantPlaylistSettings = { id: "multi-variant", playlistName: "multi-variant", destinations };
   const mediaSettings = {
     partDurationSeconds: 1.0,

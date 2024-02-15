@@ -64,9 +64,9 @@ export async function main() {
 
         // And subscribe the multi variant playlist, now that the stream has bitrate
         // metadata
-        multiVariantOutput.subscribe([
-          { source: streamMetadataOverride, sourceSelector: selectPlaylist },
-        ]);
+        // multiVariantOutput.subscribe([
+        //   { source: streamMetadataOverride, sourceSelector: selectPlaylist },
+        // ]);
       } else if (stats.sampleSizeSeconds === 5 && streamStarted) {
         console.log(`  audio: ${(audio.bitrate / 1000).toFixed(1)}kbps`)
         console.log(`  video: ${(video.bitrate / 1000).toFixed(1)}kbps`);
@@ -84,7 +84,7 @@ export async function main() {
     { source: srtAacInput, sourceSelector: selectAV },
   ]);
 
-  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10 }]
+  const destinations: CmafDestinationSettings[] = [{ type: "local", retentionPeriodSeconds: 10, id: "local" }]
 
   const multiVariantPlaylistSettings = { id: "multi-variant", playlistName: "multi-variant", destinations };
   const audio = {

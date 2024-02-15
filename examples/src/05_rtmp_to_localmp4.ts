@@ -1,6 +1,8 @@
 import { Norsk, requireAV, selectAV } from "@norskvideo/norsk-sdk"
 
 export async function main() {
+  const durationMs = 30_000;
+
   const norsk = await Norsk.connect({
     onShutdown: () => {
       console.log("Norsk has shutdown");
@@ -20,6 +22,7 @@ export async function main() {
   });
 
   output.subscribe([{ source: input, sourceSelector: selectAV }], requireAV);
+  console.log(`Recording to mp4 for ${durationMs/1000} seconds`);
 
   // We can write non-fragmented snapshots periodically
   let i = 0;
@@ -31,5 +34,5 @@ export async function main() {
 
   // And close it to write out the non-fragmented file name set in config
   // (will close norsk via onClose callback above)
-  setTimeout(() => { console.log("Timer expired, closing output"); output.close(); }, 30000);
+  setTimeout(() => { console.log("Timer expired, closing output"); output.close(); }, durationMs);
 }
