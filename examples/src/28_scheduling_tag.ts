@@ -22,8 +22,8 @@ export async function main() {
     segmentDurationSeconds: 2.0,
   };
 
-  const audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings, maximumPlaylistSegments: 10 });
-  const videoOutput = await norsk.output.cmafVideo({ id: "video", destinations, ...segmentSettings, maximumPlaylistSegments: 10 });
+  const audioOutput = await norsk.output.cmafAudio({ id: "audio", destinations, ...segmentSettings });
+  const videoOutput = await norsk.output.cmafVideo({ id: "video", destinations, ...segmentSettings });
   const masterOutput = await norsk.output.cmafMultiVariant({ id: "multi-variant", playlistName: "multi-variant", destinations });
 
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);

@@ -145,7 +145,7 @@ read_config() {
 }
 
 function listExamples() {
-    find docker-compose/host-networking -name \*yml | xargs cat |
+    find docker-compose/host-networking -name \*yml | sort | xargs cat |
         grep -e '^#' |
         sed -e 's/# Norsk Media example: //' \
             -e 's/#/ /' \
