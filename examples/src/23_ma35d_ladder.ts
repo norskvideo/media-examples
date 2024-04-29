@@ -20,7 +20,10 @@ export async function main(): Promise<void> {
     ...new Set([...cmafRenditions, ...whepRenditions]),
   ];
 
-  const norsk = await Norsk.connect();
+  const norsk = await Norsk.connect({ onAmdMA35DLoad: (load) => {
+    // console.log("HERE", load)
+  }});
+
   const input = await norsk.input.rtmpServer({ id: "rtmp" });
 
   const abrLadder = await norsk.processor.transform.videoEncode({

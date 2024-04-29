@@ -8,6 +8,9 @@
         "./todo"
     ],
     "compilerOptions": {
+        "lib": [
+          "es2020", "DOM"
+        ],
         "allowJs": true,
         "composite": true,
         "esModuleInterop": true,
@@ -20,6 +23,6 @@
         "strict": true,
         "strictFunctionTypes": true,
         "strictNullChecks": true,
-        "target": "es6"
+        "target": "ES2020"
     }
 }
