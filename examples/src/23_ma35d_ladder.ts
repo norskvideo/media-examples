@@ -20,7 +20,7 @@ export async function main(): Promise<void> {
     ...new Set([...cmafRenditions, ...whepRenditions]),
   ];
 
-  const norsk = await Norsk.connect({ onAmdMA35DLoad: (load) => {
+  const norsk = await Norsk.connect({ onAmdMA35DLoad: (_load) => {
     // console.log("HERE", load)
   }});
 

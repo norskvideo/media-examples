@@ -1,10 +1,10 @@
 import { CmafDestinationSettings, Norsk, selectAudio, selectPlaylist, selectVideo } from "@norskvideo/norsk-sdk";
-const webServer = require('./common/webServer')
+import { runWebServer } from './common/webServer';
 
 const port = 3210;
 
 export async function main() {
-  webServer.runWebServer(port);
+  runWebServer(port);
 
   const norsk = await Norsk.connect();
 

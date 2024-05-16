@@ -146,7 +146,7 @@ export async function main() {
   console.log(`slideSpeakerOutput : ${slideSpeakerOutput.playerUrl}`);
 
   const rtmpUrl = await getRtmpOutputUrl();
-  const output = new RtmpOutputWithRetry(norsk, mainOutput, rtmpUrl);
+  const _output = new RtmpOutputWithRetry(norsk, mainOutput, rtmpUrl);
   //await output.run();
 }
 

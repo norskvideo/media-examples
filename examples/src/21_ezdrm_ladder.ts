@@ -2,17 +2,10 @@ import {
   CmafDestinationSettings,
   CmafOutputSettings,
   Norsk,
-  RtmpServerInputNode,
-  SrtInputNode,
-  StreamMetadata,
-  VideoEncodeRung,
-  selectAudio,
-  selectPlaylist,
   selectVideo,
-  videoStreamKeys,
 } from "@norskvideo/norsk-sdk";
 import { AppRenditions, mkRungs } from "./common/ladder";
-import { mkCmafOutputs, mkWhepOutputs } from "./common/mkOutputs";
+import { mkCmafOutputs } from "./common/mkOutputs";
 import * as cpix from "./common/cpix";
 import * as ezdrm from "./common/ezDrmCrypto";
 

@@ -1,9 +1,9 @@
 import { CmafDestinationSettings, DestinationId, HlsPlaylist, HlsPlaylistAdditions, Norsk, selectAudio, selectPlaylist, selectVideo } from "@norskvideo/norsk-sdk";
-const webServer = require('./common/webServer')
+import { runWebServer } from './common/webServer';
 
 export async function main() {
   const port = 3210;
-  webServer.runWebServer(port, { logPlaylists: true });
+  runWebServer(port, { logPlaylists: true });
 
   const norsk = await Norsk.connect();
 
@@ -33,8 +33,8 @@ export async function main() {
     }
   }
 
-  let audioPlaylistLocal: HlsPlaylist = emptyHlsPlaylist();
-  let audioPlaylistPush: HlsPlaylist = emptyHlsPlaylist();
+  const audioPlaylistLocal: HlsPlaylist = emptyHlsPlaylist();
+  const audioPlaylistPush: HlsPlaylist = emptyHlsPlaylist();
 
   audioOutput.onPlaylistAddition = (destinationId: DestinationId, playlistAdditions: HlsPlaylistAdditions): HlsPlaylist => {
     if (destinationId == localDestination.id) {
@@ -46,8 +46,8 @@ export async function main() {
     }
   }
 
-  let videoPlaylistLocal: HlsPlaylist = emptyHlsPlaylist();
-  let videoPlaylistPush: HlsPlaylist = emptyHlsPlaylist();
+  const videoPlaylistLocal: HlsPlaylist = emptyHlsPlaylist();
+  const videoPlaylistPush: HlsPlaylist = emptyHlsPlaylist();
 
   videoOutput.onPlaylistAddition = (destinationId: DestinationId, playlistAdditions: HlsPlaylistAdditions): HlsPlaylist => {
     if (destinationId == localDestination.id) {
