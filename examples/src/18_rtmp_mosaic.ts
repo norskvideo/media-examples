@@ -165,7 +165,7 @@ class Mosaic {
             { source: this.audioSignalInput, sourceSelector: audioStreamKeys },
           ]);
 
-          let url = await output.url();
+          const url = await output.url();
           console.log("Media playlist", `${url}`);
           console.log("WebRTC Player URL: " + rtcOutput.playerUrl);
         });
