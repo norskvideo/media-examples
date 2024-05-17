@@ -21,10 +21,13 @@
     "/lib"
   ],
   "scripts": {
-    "build:ts": "npx tsc && npx eslint src tests",
+    "build:ts": "npx tsc",
     "build:css": "tailwindcss -i static/tailwind.css -o static/style.css",
     "build:css-dark": "tailwindcss -c tailwind.config-dark.js -i static/tailwind.css -o static/style-dark.css",
     "build": "npm run build:ts && npm run build:css && npm run build:css-dark",
+    "lint": "npm run lint:src && npm run lint:tests",
+    "lint:src": "npx eslint src",
+    "lint:tests": "npx eslint tests",
     "clean": "rm -rf lib"
   },
   "prettier": {},
