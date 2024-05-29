@@ -58,7 +58,7 @@ export async function main() {
           spliceEventCancelIndicator: false,
           outOfNetworkIndicator: true,
           spliceImmediateFlag: true,
-          mode: { spliceTime: {} },
+          mode: { mode: 'program', spliceTime: {} },
           breakDuration: { autoReturn: true, duration: BigInt(12 * 90000) },
           uniqueProgramId: 123456,
           availNum: 0,
