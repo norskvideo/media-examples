@@ -17,7 +17,7 @@ will give you a list of the examples as well as usage details.  The examples are
 Run some examples, browse the example code (they are all short) and come back in a bit.  Don't worry, we'll wait for you!
 
 ```
-./run-example start 00_hello_norsk`
+./run-example start 00_hello_norsk
 ```
 Should output something like:
 [example]
