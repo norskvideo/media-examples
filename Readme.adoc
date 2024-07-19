@@ -21,7 +21,7 @@ Run some examples, browse the example code (they are all short) and come back in
 ```
 Should output something like:
 [example]
-`Hello from norsk version: v0.0.365-main` +
+`Hello from norsk version: v0.0.315-main` +
 `Norsk has shutdown`
 
 == Getting a Developer License
