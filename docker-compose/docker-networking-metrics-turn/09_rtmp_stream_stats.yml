@@ -94,7 +94,7 @@ services:
       - 3478:3478/tcp # TURN tcp transport
       - 5349:5349/tcp # tls
       - 5349:5349/udp # tls
-      - 59160-59200:59160-59200/udp  # UDP relay
+      - 59160-59170:59160-59170/udp  # UDP relay
     networks:
       - norskNetwork
   prometheus:
