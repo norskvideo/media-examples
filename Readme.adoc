@@ -3,21 +3,21 @@
 == About the Examples
 This repo exists for a couple of reasons.  Primarily it contains some simple examples of Norsk Media applications to give you a flavour of what you can do with Norsk Media in just a few lines of code.
 
-It also contains a `run-example` script alongside a number of `docker-compose.yaml` files to get you up and running as quickly as possible without having to think about your development environment. 
+It also contains a `run-example` script alongside a number of `docker-compose.yaml` files to get you up and running as quickly as possible without having to think about your development environment.
 
-== TLDR 
-So long as you have a xref:_getting_a_developer_license[Norsk license file] and both `docker` and `docker-compose` available then feel free to jump right in and try a few of the examples. 
+== TLDR
+So long as you have a Norsk license file and Docker Compose available then feel free to jump right in and try a few of the examples. There are details of how to get a Developer License and Docker Compose below.
 
-Calling 
+Calling
 ```
 ./run-example --help
-``` 
-will give you a list of the examples as well as usage details.  The examples are numbered from `00_` upward - in a rough order you might want to look at them in if this is your first exposure to Norsk Media.  The names should make it pretty clear what each example does.  
+```
+will give you a list of the examples as well as usage details.  The examples are numbered from `00_` upward - in a rough order you might want to look at them in if this is your first exposure to Norsk Media.  The names should make it pretty clear what each example does.
 
 Run some examples, browse the example code (they are all short) and come back in a bit.  Don't worry, we'll wait for you!
 
 ```
-./run-example start 00_hello_norsk`
+./run-example start 00_hello_norsk
 ```
 Should output something like:
 [example]
@@ -25,17 +25,18 @@ Should output something like:
 `Norsk has shutdown`
 
 == Getting a Developer License
-If you filled in the evaluation form available link:www.norsk.video/TODO[here] you should receive an email with a license file within a few minutes.  If that process hasn't worked for you then please send an email to mailto:support@id3as.co.uk[Norsk Support].
+If you fill in the evaluation form available https://norsk.video/license[here] you should receive an email with a license file within a few minutes.  If that process hasn't worked for you then please send an email to mailto:support@id3as.co.uk[Norsk Support].
 
 == Docker Environment
 Norsk Media comes as a Docker container and we assume at least some familiarity with Docker.
 
-We also expect that you will have opinions about how your JavaScript/TypeScript development environment should be set up.  Given those environments can vary a lot, this repo contains a `docker-compose` setup that minimizes any local environmental dependencies to make sure you can get started with Norsk Media as quickly and easily as possible.  We want you to be able to concentrate on Norsk without first having to worry about your particular node/Typescript setup. 
+We also expect that you will have opinions about how your JavaScript/TypeScript development environment should be set up.  Given those environments can vary a lot, this repo contains a `docker-compose` setup that minimizes any local environmental dependencies to make sure you can get started with Norsk Media as quickly and easily as possible.  We want you to be able to concentrate on Norsk without first having to worry about your particular node/Typescript setup.
 
-This is just there as a short cut to get you started! Don't take this as any sort of "mandated way of working" with Norsk Media - use whatever you are familiar with and works for you.  
+Here are some links to install guides for https://docs.docker.com/get-docker/[Docker Desktop] (which includes `docker-compose`), or the separate https://docs.docker.com/engine/install/[Docker Engine] and https://docs.docker.com/compose/install/linux/#install-the-plugin-manually[docker-compose] plugin.
 
-Here are some links to install guides for link:https://docs.docker.com/get-docker/[Docker Desktop] (which includes `docker-compose`), or the separate link:https://docs.docker.com/engine/install/[Docker Engine] and link:https://docs.docker.com/compose/install/linux/#install-the-plugin-manually[docker-compose] plugin.
+This is just there as a shortcut to get you started! Don't take this as any sort of "mandated way of working" with Norsk Media - use whatever development environment you are familiar with and works for you.
 
+== Get Your Hands Dirty
 Feel free to edit the examples as part of your exploration. The `run-example` script should re-compile the code for you if required.
 
 NOTE: The provided `docker-compose.yaml` files are designed to be run one at a time (in particular, they all use the same host ports, so running 2 or more at the same time won't end well).  You can run multiple applications against a single Norsk Media instance, but in a production you may well want to run multiple instances at the same time (if for example you are on a huge server and want to be explicit about CPU sets / quotas etc).  You'll just need to make sure you set up your host port / volume mappings so as to avoid clashes.
@@ -49,16 +50,16 @@ Once you are comfortable with some of the Norsk Media examples, feel free to com
 
 We expect most production use-cases of Norsk Media to involve a transcode.  If you build an ABR ladder or compose multiple cameras / overlays into a single output then a transcode will definitely happen.
 
-The first few examples do not explicitly transcode their sources.  
+The first few examples do not explicitly transcode their sources.
 
 Part of the strength of Norsk Media is that it's a media expert, so you don't have to be.  If you send a stream to one of your Norsk Media nodes, it will check whether the flow you have asked for might work.  For example, the `rtmp_to_webrtc` example sends aac audio and H264 video into the RTMP Server and allows the contents to be viewed over WebRTC.
 
 Norsk Media knows that the aac audio it receives cannot be encapsulated in a WebRTC stream (WebRTC only supports Opus audio, whereas RTMP does not support Opus), so will automatically transcode the audio it receives into Opus before passing it to the WebRTC packager.
 
-Things are not so clear cut with the video stream in that example.  RTMP is perfectly capable of encapsulating H264 video - and WebRTC is perfectly capable of playing it.  That, unfortunately does not mean that you will have a flawless experience. Take, for example, a video stream with b-frames in it. 
+Things are not so clear cut with the video stream in that example.  RTMP is perfectly capable of encapsulating H264 video - and WebRTC is perfectly capable of playing it.  That, unfortunately does not mean that you will have a flawless experience. Take, for example, a video stream with b-frames in it.
 
 There are several reasons why you probably don't want b-frames in a WebRTC stream.  For one thing, they increase latency (as a player cannot decode them until the forward-referenced frame arrives), but probably more importantly WebRTC players give a poor viewing experience if sent streams that contain b-frames (if you know of a player that deals with this nicely, do let us know - we'd be very interested!)
 
 This makes it impossible for Norsk Media to always "do the right thing" for WebRTC output from an H264 source. It cannot always know what "the right thing" is.  There are similar challenges present for HLS - in particular whether the part / segment length choices declared in the HLS nodes are compatible with the inbound streams.
 
-These challenges tend to disappear when your application is doing a transcode as you can control the generated media.  That said, passthrough is fully supported by Norsk Media and can be a very valuable technique.  
+These challenges tend to disappear when your application is doing a transcode as you can control the generated media.  That said, passthrough is fully supported by Norsk Media and can be a very valuable technique.
