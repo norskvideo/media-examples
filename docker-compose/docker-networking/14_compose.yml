@@ -87,7 +87,7 @@ services:
       - ./data:/tmp/data:ro
     command:
     - |
-        sleep 1
+        sleep 2
         ffmpeg -v error -re -stream_loop -1 -i data/Weaving.ts  -vcodec copy -codec copy -f flv 'rtmp://norsk:1935/acme/high'
     depends_on:
       - example
