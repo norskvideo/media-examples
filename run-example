@@ -275,7 +275,7 @@ function stopExample() {
 }
 
 function downloadMediaAssets() {
-    MEDIA_ASSETS="Weaving.ts Weaving-stereo.ts InkDrop.ts InkDrop-stereo.ts TraditionalMusic.mp4"
+    MEDIA_ASSETS="Weaving.ts Weaving.ts InkDrop.ts InkDrop.ts TraditionalMusic.mp4"
 
     for i in $MEDIA_ASSETS; do
         if [[ ! -f data/$i ]]; then

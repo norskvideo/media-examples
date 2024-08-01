@@ -38,7 +38,7 @@ services:
       - EZDRM_PASSWORD
       - EZDRM_WV_PX
       - EZDRM_PR_PX
-      
+
     depends_on:
       norsk:
         condition: service_healthy
@@ -55,7 +55,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/Weaving-stereo.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://127.0.0.1:5001?pkt_size=1316'
+        ffmpeg -v error -re -stream_loop -1 -i data/Weaving.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://127.0.0.1:5001?pkt_size=1316'
     depends_on:
       - example
   # [End of source]

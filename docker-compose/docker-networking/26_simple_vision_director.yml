@@ -26,8 +26,8 @@ services:
       - ./data:/mnt/data
       - ${OUTPUT_ROOT}:/mnt/output
       - ${LOG_ROOT}:/var/log/norsk
-      
-    command: --license-file /mnt/license.json 
+
+    command: --license-file /mnt/license.json
     shm_size: '2gb'
     # cpuset: "0-15"
     networks:
@@ -53,7 +53,7 @@ services:
       - EZDRM_PASSWORD
       - EZDRM_WV_PX
       - EZDRM_PR_PX
-      
+
     depends_on:
       norsk:
         condition: service_healthy
@@ -71,7 +71,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/Weaving-stereo.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5001?pkt_size=1316&streamid=camera1'
+        ffmpeg -v error -re -stream_loop -1 -i data/Weaving.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5001?pkt_size=1316&streamid=camera1'
     depends_on:
       - example
     networks:
@@ -88,7 +88,7 @@ services:
     command:
     - |
         sleep 2
-        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop-stereo.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5002?pkt_size=1316&streamid=camera2'
+        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5002?pkt_size=1316&streamid=camera2'
     depends_on:
       - example
     networks:
