@@ -104,7 +104,7 @@ read_config() {
             echo "Running on a Mac - only 127.0.0.1 access supported"
             ip_address="127.0.0.1"
         else
-            public_candidate=$(curl -s --max-time 1 ifconfig.me || true)
+            public_candidate=$(wget -4 -q -T 1 -O - ifconfig.me || true)
 
             echo "What IP address you will access the Norsk applications on?"
             echo "For local dev you probably want 127.0.0.1 and on the cloud you probably want your public IP address."
@@ -275,11 +275,11 @@ function stopExample() {
 }
 
 function downloadMediaAssets() {
-    MEDIA_ASSETS="Weaving.ts Weaving.ts InkDrop.ts InkDrop.ts TraditionalMusic.mp4"
+    MEDIA_ASSETS="Weaving.ts InkDrop.ts TraditionalMusic.mp4"
 
     for i in $MEDIA_ASSETS; do
         if [[ ! -f data/$i ]]; then
-            curl -q "https://s3.eu-west-1.amazonaws.com/norsk.video/media-examples/data/$i" >"data/$i"
+            wget -q -O "data/$i" "https://s3.eu-west-1.amazonaws.com/norsk.video/media-examples/data/$i"
         fi
     done
 }
