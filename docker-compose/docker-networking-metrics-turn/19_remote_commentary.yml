@@ -72,7 +72,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/Weaving-stereo.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5001?pkt_size=1316'
+        ffmpeg -v error -re -stream_loop -1 -i data/Weaving.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://norsk:5001?pkt_size=1316'
     depends_on:
       - example
     networks:
