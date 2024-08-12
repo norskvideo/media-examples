@@ -8,7 +8,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:v1.0.368-main
+    image: norskvideo/norsk:v1.0.370-main
     network_mode: host
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
@@ -38,7 +38,7 @@ services:
       - EZDRM_PASSWORD
       - EZDRM_WV_PX
       - EZDRM_PR_PX
-
+      
     depends_on:
       norsk:
         condition: service_healthy
