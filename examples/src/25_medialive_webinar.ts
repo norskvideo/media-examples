@@ -22,6 +22,7 @@ import {
   videoToPin,
   RtmpOutputNode,
   ReceiveFromAddressAuto,
+  VideoComposeDefaults,
 } from "@norskvideo/norsk-sdk";
 import {
   DescribeFlowCommand,
@@ -96,16 +97,22 @@ export async function main() {
     pin: "slides",
     opacity: 1.0,
     zIndex: 0,
-    sourceRect: { x: 0, y: 0, ...landscapeFull },
-    destRect: { x: 0, y: 0, ...landscapeFull },
+    compose: VideoComposeDefaults.fixed({
+      sourceRect: { x: 0, y: 0, ...landscapeFull },
+      destRect: { x: 0, y: 0, ...landscapeFull },
+      referenceResolution: landscapeFull
+    })
   };
 
   const speakerPart: ComposePart<"speaker"> = {
     pin: "speaker",
     opacity: 1.0,
     zIndex: 1,
-    sourceRect: { ...landscapeFull, x: 0, y: 0 },
-    destRect: { ...embeddedPortraitPosition, ...embeddedPortraitSize },
+    compose: VideoComposeDefaults.fixed({
+      sourceRect: { x: 0, y: 0, ...landscapeFull },
+      destRect: { ...embeddedPortraitPosition, ...embeddedPortraitSize },
+      referenceResolution: landscapeFull
+    })
   };
 
   const parts = [speakerPart, slidesPart];
@@ -114,7 +121,6 @@ export async function main() {
     id: "compose",
     referenceStream: slidesPart.pin,
     outputResolution: landscapeFull,
-    referenceResolution: landscapeFull,
     outputPixelFormat: "bgra",
     parts,
   };

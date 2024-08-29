@@ -3,7 +3,9 @@ import {
   ComposePart,
   LocalFileInputSettings,
   Norsk,
+  OffsetRect,
   SrtInputSettings,
+  VideoComposeDefaults,
   VideoComposeSettings,
   audioToPin,
   selectAudio,
@@ -31,32 +33,34 @@ export async function main() {
     pin: "background",
     opacity: 1.0,
     zIndex: 0,
-    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-    destRect: { x: 0, y: 0, width: 100, height: 100 },
+    compose: VideoComposeDefaults.fullscreen()
   };
-  const embedded: ComposePart<"embedded"> = {
+  const embedded: ((destRect: OffsetRect) => ComposePart<"embedded">) = (destRect) => ({
     pin: "embedded",
     opacity: 1.0,
     zIndex: 1,
-    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-    destRect: topRight,
-  };
+    compose: VideoComposeDefaults.percentage({
+      sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+      destRect: destRect,
+    })
+  });
   const logo: ComposePart<"logo"> = {
     pin: "logo",
     opacity: 1.0,
     zIndex: 2,
-    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-    destRect: { x: 5, y: 5, width: 10, height: 14 },
+    compose: VideoComposeDefaults.percentage({
+      sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+      destRect: { x: 5, y: 5, width: 10, height: 14 },
+    })
   };
 
-  const parts = [background, embedded, logo];
+  const parts = [background, embedded(topRight), logo];
 
   const composeSettings: VideoComposeSettings<
     "background" | "embedded" | "logo"
   > = {
     id: "compose",
     referenceStream: background.pin,
-    referenceResolution: { width: 100, height: 100 }, // make it % based
     outputResolution: { width: 1280, height: 720 },
     parts,
     outputPixelFormat: "rgba",
@@ -80,7 +84,7 @@ export async function main() {
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },
-    { source: input2, sourceSelector: videoToPin(embedded.pin) },
+    { source: input2, sourceSelector: videoToPin("embedded") },
     { source: input3, sourceSelector: videoToPin(logo.pin) },
   ]);
 
@@ -109,24 +113,24 @@ export async function main() {
 
   console.log(`WebRTC Player URL: ${output.playerUrl}`);
 
-  let newParts = [background, { ...embedded, destRect: topRight }, logo];
-  let changeCount = 0;
-  setInterval(() => {
-    switch (changeCount % 4) {
-      case 0:
-        newParts = [background, { ...embedded, destRect: topRight }, logo];
-        break;
-      case 1:
-        newParts = [background, { ...embedded, destRect: bottomRight }, logo];
-        break;
-      case 2:
-        newParts = [background, { ...embedded, destRect: bottomLeft }, logo];
-        break;
-      case 3:
-        newParts = [background, logo];
-        break;
-    }
-    compose.updateConfig({ parts: newParts });
-    changeCount += 1;
-  }, 2000);
+  // let newParts = [background, embedded(topRight), logo];
+  // let changeCount = 0;
+  // setInterval(() => {
+  //   switch (changeCount % 4) {
+  //     case 0:
+  //       newParts = [background, embedded(topRight), logo];
+  //       break;
+  //     case 1:
+  //       newParts = [background, embedded(bottomRight), logo];
+  //       break;
+  //     case 2:
+  //       newParts = [background, embedded(bottomLeft), logo];
+  //       break;
+  //     case 3:
+  //       newParts = [background, logo];
+  //       break;
+  //   }
+  //   compose.updateConfig({ parts: newParts });
+  //   changeCount += 1;
+  // }, 2000);
 }

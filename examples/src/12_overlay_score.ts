@@ -8,6 +8,7 @@ import {
   selectVideo,
   selectAudio,
   videoToPin,
+  VideoComposeDefaults,
 } from "@norskvideo/norsk-sdk";
 import { default as express, Request, Response } from "express";
 import { webRtcServerConfig } from "./common/webRtcServerConfig";
@@ -23,7 +24,7 @@ export async function main() {
   const input1 = await norsk.input.rtmpServer({ id: "rtmpInput" });
   const input2 = await norsk.input.browser(browserSettings);
   const compose = await norsk.processor.transform.videoCompose(composeSettings);
-  const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig});
+  const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin(background.pin) },
@@ -49,15 +50,13 @@ const background: ComposePart<"background"> = {
   pin: "background",
   opacity: 1.0,
   zIndex: 0,
-  sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-  destRect: { x: 0, y: 0, width: 100, height: 100 },
+  compose: VideoComposeDefaults.fullscreen()
 };
 const overlay: ComposePart<"overlay"> = {
   pin: "overlay",
   opacity: 1.0,
   zIndex: 1,
-  sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-  destRect: { x: 0, y: 0, width: 100, height: 100 },
+  compose: VideoComposeDefaults.fullscreen()
 };
 
 const parts = [background, overlay];
@@ -65,7 +64,6 @@ const composeSettings: VideoComposeSettings<"background" | "overlay"> = {
   id: "compose",
   referenceStream: background.pin,
   outputResolution: { width: 1280, height: 720 },
-  referenceResolution: { width: 100, height: 100 },
   outputPixelFormat: "bgra",
   parts,
 };

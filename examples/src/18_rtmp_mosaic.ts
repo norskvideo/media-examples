@@ -7,6 +7,7 @@ import {
   RtmpServerInputNode,
   RtmpServerStreamKeys,
   StreamMetadata,
+  VideoComposeDefaults,
   VideoComposeNode,
   VideoEncodeRung,
   audioStreamKeys,
@@ -106,7 +107,6 @@ class Mosaic {
         .videoCompose({
           id: "compose",
           referenceStream: this.streams[0],
-          referenceResolution: { width: 100, height: 100 }, // make it % based
           outputResolution: { width: 1280, height: 720 },
           parts: createParts(this.streams),
         })
@@ -180,15 +180,17 @@ class Mosaic {
 function createParts(streams: string[]) {
   const division = Math.ceil(Math.sqrt(streams.length));
   return streams.map((stream, i) => ({
-    destRect: {
-      width: 100 / division,
-      height: 100 / division,
-      x: (100 / division) * (i % division),
-      y: (100 / division) * Math.floor(i / division),
-    },
+    compose: VideoComposeDefaults.percentage({
+      sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+      destRect: {
+        width: 100 / division,
+        height: 100 / division,
+        x: (100 / division) * (i % division),
+        y: (100 / division) * Math.floor(i / division),
+      },
+    }),
     opacity: 1.0,
     pin: stream,
-    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
     zIndex: 1,
   }));
 }

@@ -16,6 +16,7 @@ import {
   clientHostExternal,
   debugUrlPrefix,
   StreamSwitchSmoothNode,
+  VideoComposeDefaults,
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
 import express = require("express");
@@ -197,15 +198,16 @@ const background: ComposePart<"background"> = {
   pin: "background",
   opacity: 1.0,
   zIndex: 0,
-  sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-  destRect: { x: 0, y: 0, width: 100, height: 100 },
+  compose: VideoComposeDefaults.fullscreen()
 };
 const embedded: ComposePart<"embedded"> = {
   pin: "embedded",
   opacity: 1.0,
   zIndex: 1,
-  sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-  destRect: bottomRight,
+  compose: VideoComposeDefaults.percentage({
+    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+    destRect: bottomRight,
+  })
 };
 
 function composeSettings(
@@ -214,7 +216,6 @@ function composeSettings(
   return {
     id,
     referenceStream: background.pin,
-    referenceResolution: { width: 100, height: 100 }, // make it % based
     outputResolution: { width: 1280, height: 720 },
     parts,
     outputPixelFormat: "yuv420p",

@@ -1,7 +1,9 @@
 import {
   ComposePart,
   Norsk,
+  OffsetRect,
   SrtInputSettings,
+  VideoComposeDefaults,
   VideoComposeSettings,
   selectAudio,
   selectVideo,
@@ -25,31 +27,34 @@ export async function main() {
   const full = { x: 0, y: 0, width: 100, height: 100 };
   const bottomLeft = { x: 5, y: 50, width: 45, height: 45 };
 
-  const background: ComposePart<"background"> = {
+  const background: (destRect?: OffsetRect) => ComposePart<"background"> = (destRect) => ({
     pin: "background",
     opacity: 1.0,
     zIndex: 0,
-    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-    destRect: { x: 0, y: 0, width: 100, height: 100 },
+    compose: VideoComposeDefaults.percentage({
+      sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+      destRect: destRect ?? { x: 0, y: 0, width: 100, height: 100 },
+    }),
     id: "background",
     transition: { durationMs: 1000.0 },
-  };
-  const embedded: ComposePart<"embedded"> = {
+  });
+  const embedded: (destRect: OffsetRect) => ComposePart<"embedded"> = (destRect) => ({
     pin: "embedded",
     opacity: 1.0,
     zIndex: 1,
-    sourceRect: { x: 0, y: 0, width: 100, height: 100 },
-    destRect: topRight,
+    compose: VideoComposeDefaults.percentage({
+      sourceRect: { x: 0, y: 0, width: 100, height: 100 },
+      destRect,
+    }),
     id: "embed",
     transition: { durationMs: 1000.0, easing: "ease_in" },
-  };
+  });
 
-  const parts = [background, embedded];
+  const parts = [background(), embedded(topRight)];
 
   const composeSettings: VideoComposeSettings<"background" | "embedded"> = {
     id: "compose",
-    referenceStream: background.pin,
-    referenceResolution: { width: 100, height: 100 }, // make it % based
+    referenceStream: "background",
     outputResolution: { width: 1280, height: 720 },
     parts,
     onError: (_err) => process.exit(), // interval keeps this script alive after nodes close
@@ -69,8 +74,8 @@ export async function main() {
   const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
 
   compose.subscribeToPins([
-    { source: input1, sourceSelector: videoToPin(background.pin) },
-    { source: input2, sourceSelector: videoToPin(embedded.pin) },
+    { source: input1, sourceSelector: videoToPin("background") },
+    { source: input2, sourceSelector: videoToPin("embedded") },
   ]);
 
   output.subscribe([
@@ -80,29 +85,29 @@ export async function main() {
 
   console.log(`WebRTC Player URL: ${output.playerUrl}`);
 
-  let newParts = [background, { ...embedded, destRect: topRight }];
+  let newParts = [background(), embedded(topRight)];
   let changeCount = 0;
   setInterval(() => {
     switch (changeCount % 5) {
       case 0:
-        newParts = [background, { ...embedded, destRect: bottomRight }];
+        newParts = [background(), embedded(bottomRight)];
         break;
       case 1:
-        newParts = [background, { ...embedded, destRect: full }];
+        newParts = [background(), embedded(full)];
         break;
       case 2:
-        newParts = [background, { ...embedded, destRect: full, opacity: 0.0 }];
+        newParts = [background(), { ...embedded(full), opacity: 0.0 }];
         break;
       case 3:
         newParts = [
-          { ...embedded, destRect: full, opacity: 1.0, transition: undefined },
-          { ...background, zIndex: 2 },
+          { ...embedded(full), opacity: 1.0, transition: undefined },
+          { ...background(), zIndex: 2 },
         ];
         break;
       case 4:
         newParts = [
-          { ...embedded, destRect: full, opacity: 1.0 },
-          { ...background, zIndex: 2, destRect: bottomLeft },
+          { ...embedded(full), opacity: 1.0 },
+          { ...background(bottomLeft), zIndex: 2 },
         ];
         break;
     }
