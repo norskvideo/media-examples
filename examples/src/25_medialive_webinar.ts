@@ -97,22 +97,19 @@ export async function main() {
     pin: "slides",
     opacity: 1.0,
     zIndex: 0,
-    compose: VideoComposeDefaults.fixed({
-      sourceRect: { x: 0, y: 0, ...landscapeFull },
-      destRect: { x: 0, y: 0, ...landscapeFull },
-      referenceResolution: landscapeFull
-    })
+    compose: VideoComposeDefaults.fullscreen()
   };
 
   const speakerPart: ComposePart<"speaker"> = {
     pin: "speaker",
     opacity: 1.0,
     zIndex: 1,
-    compose: VideoComposeDefaults.fixed({
-      sourceRect: { x: 0, y: 0, ...landscapeFull },
-      destRect: { ...embeddedPortraitPosition, ...embeddedPortraitSize },
-      referenceResolution: landscapeFull
-    })
+    compose: (p) => {
+      return {
+        sourceRect: { x: 0, y: 0, width: p.width, height: p.height },
+        destRect: { ...embeddedPortraitPosition, ...embeddedPortraitSize }
+      }
+    }
   };
 
   const parts = [speakerPart, slidesPart];
