@@ -113,24 +113,24 @@ export async function main() {
 
   console.log(`WebRTC Player URL: ${output.playerUrl}`);
 
-  // let newParts = [background, embedded(topRight), logo];
-  // let changeCount = 0;
-  // setInterval(() => {
-  //   switch (changeCount % 4) {
-  //     case 0:
-  //       newParts = [background, embedded(topRight), logo];
-  //       break;
-  //     case 1:
-  //       newParts = [background, embedded(bottomRight), logo];
-  //       break;
-  //     case 2:
-  //       newParts = [background, embedded(bottomLeft), logo];
-  //       break;
-  //     case 3:
-  //       newParts = [background, logo];
-  //       break;
-  //   }
-  //   compose.updateConfig({ parts: newParts });
-  //   changeCount += 1;
-  // }, 2000);
+  let newParts = [background, embedded(topRight), logo];
+  let changeCount = 0;
+  setInterval(() => {
+    switch (changeCount % 4) {
+      case 0:
+        newParts = [background, embedded(topRight), logo];
+        break;
+      case 1:
+        newParts = [background, embedded(bottomRight), logo];
+        break;
+      case 2:
+        newParts = [background, embedded(bottomLeft), logo];
+        break;
+      case 3:
+        newParts = [background, logo];
+        break;
+    }
+    compose.updateConfig({ parts: newParts });
+    changeCount += 1;
+  }, 2000);
 }

@@ -8,6 +8,7 @@ import {
   selectVideo,
   selectAudio,
   videoToPin,
+  BrowserInputNode,
   VideoComposeDefaults,
 } from "@norskvideo/norsk-sdk";
 import { default as express, Request, Response } from "express";
@@ -16,24 +17,25 @@ import { webRtcServerConfig } from "./common/webRtcServerConfig";
 const app = express();
 const port = 3000;
 
+let browserInput: BrowserInputNode | undefined = undefined;
 
 export async function main() {
   runWebServer();
   const norsk = await Norsk.connect();
 
-  const input1 = await norsk.input.rtmpServer({ id: "rtmpInput" });
-  const input2 = await norsk.input.browser(browserSettings);
+  const rtmpInput = await norsk.input.rtmpServer({ id: "rtmpInput" });
+  browserInput = await norsk.input.browser(browserSettings);
   const compose = await norsk.processor.transform.videoCompose(composeSettings);
   const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
 
   compose.subscribeToPins([
-    { source: input1, sourceSelector: videoToPin(background.pin) },
-    { source: input2, sourceSelector: videoToPin(overlay.pin) },
+    { source: rtmpInput, sourceSelector: videoToPin(background.pin) },
+    { source: browserInput, sourceSelector: videoToPin(overlay.pin) },
   ]);
 
   output.subscribe([
     { source: compose, sourceSelector: selectVideo },
-    { source: input1, sourceSelector: selectAudio },
+    { source: rtmpInput, sourceSelector: selectAudio },
   ]);
 
   console.log(`WebRTC Player URL: ${output.playerUrl}`);
@@ -68,7 +70,6 @@ const composeSettings: VideoComposeSettings<"background" | "overlay"> = {
   parts,
 };
 
-
 function runWebServer() {
   const scoreboard = {
     team1: { name: "Team1", score: 0 },
@@ -84,6 +85,13 @@ function runWebServer() {
     scoreboard.team2.score = req.body["team2-score"];
     scoreboard.team1.name = req.body["team1-name"];
     scoreboard.team2.name = req.body["team2-name"];
+    res.send("");
+  });
+  app.post("/switch", (req: Request, res: Response) => {
+    if (browserInput) {
+      console.log("Switching to Singular...");
+      browserInput.updateConfig({url: "https://app.singular.live/output/6CTPhPRe7yc5lkxgUixA5q/Default?aspect=9:5"})
+    }
     res.send("");
   });
   app.listen(port, () => {
