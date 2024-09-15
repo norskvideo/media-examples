@@ -46,7 +46,7 @@ export async function main() {
         keyFrameIntervalMin: 50,
         sceneCut: 0,
         tune: "zerolatency",
-        bitrateMode: { value: 800000, mode: "abr" }
+        bitrateMode: { value: 800, mode: "abr" }
       },
     },
   ];
@@ -100,7 +100,7 @@ export async function main() {
       frameRate: { frames: 25, seconds: 1 },
       codec: {
         type: "x264",
-        bitrateMode: { value: 8000000, mode: "abr" },
+        bitrateMode: { value: 2000, mode: "abr" },
         keyFrameIntervalMax: 50,
         keyFrameIntervalMin: 50,
         bframes: 3,
@@ -118,7 +118,7 @@ export async function main() {
       frameRate: { frames: 25, seconds: 1 },
       codec: {
         type: "x264",
-        bitrateMode: { value: 250000, mode: "abr" },
+        bitrateMode: { value: 750, mode: "abr" },
         keyFrameIntervalMax: 50,
         keyFrameIntervalMin: 50,
         bframes: 0,
@@ -133,7 +133,7 @@ export async function main() {
       frameRate: { frames: 25, seconds: 1 },
       codec: {
         type: "x264",
-        bitrateMode: { value: 150000, mode: "abr" },
+        bitrateMode: { value: 500, mode: "abr" },
         keyFrameIntervalMax: 50,
         keyFrameIntervalMin: 50,
         bframes: 0,

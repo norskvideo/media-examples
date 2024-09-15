@@ -25,7 +25,7 @@ export async function main() {
         tune: "zerolatency",
         preset: "fast",
         profile: "high",
-        bitrateMode: { value: 2000000, mode: "abr" },
+        bitrateMode: { value: 2000, mode: "abr" },
       },
     },
   ];
