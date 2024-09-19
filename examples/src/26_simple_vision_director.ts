@@ -257,7 +257,7 @@ const parts = [background, embedded];
 
 const srtInputSettings2: SrtInputSettings = {
   id: "srtInput2",
-  ip: "0.0.0.0",
+  host: "0.0.0.0",
   port: 5002,
   mode: "listener",
   sourceName: "camera2",
@@ -271,7 +271,7 @@ const srtInputSettings2: SrtInputSettings = {
 
 const srtInputSettings: SrtInputSettings = {
   id: "srtInput1",
-  ip: "0.0.0.0",
+  host: "0.0.0.0",
   port: 5001,
   mode: "listener",
   sourceName: "camera1",

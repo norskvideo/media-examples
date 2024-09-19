@@ -31,14 +31,14 @@ export async function main() {
   ];
   const srtCamera1: SrtInputSettings = {
     id: "camera1",
-    ip: "0.0.0.0",
+    host: "0.0.0.0",
     port: 5001,
     mode: "listener",
     sourceName: "camera1",
   };
   const srtCamera2: SrtInputSettings = {
     id: "camera2",
-    ip: "0.0.0.0",
+    host: "0.0.0.0",
     port: 5002,
     mode: "listener",
     sourceName: "camera2",

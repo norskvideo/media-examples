@@ -51,7 +51,7 @@ const segmentSettings: CmafOutputSettings = {
 
 const srtInputSettings: SrtInputSettings = {
   id: "srtInput",
-  ip: "0.0.0.0",
+  host: "0.0.0.0",
   port: 5001,
   mode: "listener",
   sourceName: "camera1",

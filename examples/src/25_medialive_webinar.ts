@@ -321,7 +321,7 @@ async function getSrtInputSettings(): Promise<SrtInputSettings | null> {
 
     return {
       id: "speaker",
-      ip: ipAndPort.ip,
+      host: ipAndPort.ip,
       port: ipAndPort.port,
       mode: "caller",
       sourceName: "speaker",
@@ -329,7 +329,7 @@ async function getSrtInputSettings(): Promise<SrtInputSettings | null> {
   } else {
     return {
       id: "speaker",
-      ip: "0.0.0.0",
+      host: "0.0.0.0",
       port: 5001,
       mode: "listener",
       sourceName: "speaker",
