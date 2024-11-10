@@ -4,8 +4,8 @@
   "dependencies": {
     "@aws-sdk/client-mediaconnect": "^3.388.0",
     "@aws-sdk/client-medialive": "^3.410.0",
-    "@norskvideo/norsk-api": "1.0.391",
-    "@norskvideo/norsk-sdk": "1.0.391",
+    "@norskvideo/norsk-api": "1.0.392",
+    "@norskvideo/norsk-sdk": "1.0.392",
     "axios": "^1.6.2",
     "cors": "^2.8.5",
     "ejs": "^3.1.9",
@@ -29,7 +29,7 @@
     "lint:src": "npx eslint src",
     "lint:tests": "npx eslint tests",
     "clean": "rm -rf lib",
-    "test": "NODE_DEBUG=norsk npx mocha lib/test-runner/index.js --timeout 120000"
+    "test": "npx mocha lib/test-runner/index.js --timeout 120000"
   },
   "prettier": {},
   "devDependencies": {
@@ -46,5 +46,5 @@
     "typescript": "^4.9.5",
     "why-is-node-running": "2.2.2"
   },
-  "version": "1.0.391"
+  "version": "1.0.392"
 }

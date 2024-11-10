@@ -103,7 +103,7 @@ class Mosaic {
       !this.composeCreatePending
     ) {
       this.composeCreatePending = true;
-      this.norsk.processor.transform
+      void this.norsk.processor.transform
         .videoCompose({
           id: "compose",
           referenceStream: this.streams[0],

@@ -20,9 +20,11 @@ export async function main(): Promise<void> {
     ...new Set([...cmafRenditions, ...whepRenditions]),
   ];
 
-  const norsk = await Norsk.connect({ onAmdMA35DLoad: (_load) => {
-    // console.log("HERE", load)
-  }});
+  const norsk = await Norsk.connect({
+    onAmdMA35DLoad: (_load) => {
+      // console.log("HERE", load)
+    }
+  });
 
   const input = await norsk.input.rtmpServer({ id: "rtmp" });
 
@@ -48,11 +50,11 @@ export async function main(): Promise<void> {
 
   console.log(`Multi variant playlist: ${cmafOutputs.multivariant.url}`);
   cmafRenditions.forEach((k) => {
-    cmafOutputs.videos[k]
+    void cmafOutputs.videos[k]
       .url()
       .then((url) => console.log(`HLS ${k} Playlist: ${url}`));
   });
-  cmafOutputs.audio
+  void cmafOutputs.audio
     .url()
     .then((url) => console.log(`HLS Audio Playlist: ${url}`));
 

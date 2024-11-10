@@ -3,7 +3,7 @@ import { runWebServer } from './common/webServer';
 
 export async function main() {
   const port = 3210;
-  runWebServer(port, { logPlaylists: true });
+  await runWebServer(port, { logPlaylists: true });
 
   const norsk = await Norsk.connect();
 
@@ -69,8 +69,8 @@ export async function main() {
   ]);
 
   console.log(`Master playlist: ${masterOutput.url}`);
-  audioOutput.url().then(logMediaPlaylist("audio"));
-  videoOutput.url().then(logMediaPlaylist("video"));
+  void audioOutput.url().then(logMediaPlaylist("audio"));
+  void videoOutput.url().then(logMediaPlaylist("video"));
 }
 
 function logMediaPlaylist(name: string): (url: string) => void {

@@ -45,11 +45,11 @@ export async function main(): Promise<void> {
 
   console.log(`Multi variant playlist: ${cmafOutputs.multivariant.url}`);
   cmafRenditions.forEach((k) => {
-    cmafOutputs.videos[k]
+    void cmafOutputs.videos[k]
       .url()
       .then((url) => console.log(`HLS ${k} Playlist: ${url}`));
   });
-  cmafOutputs.audio
+  void cmafOutputs.audio
     .url()
     .then((url) => console.log(`HLS Audio Playlist: ${url}`));
 

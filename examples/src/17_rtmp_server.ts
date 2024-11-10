@@ -199,7 +199,7 @@ export async function main() {
           knownApps[app].videoInput.concat(knownApps[app].audioInput).map((r) => subscribePlaylists(r))
         );
       };
-      onStream();
+      void onStream();
 
       return {
         accept: true,

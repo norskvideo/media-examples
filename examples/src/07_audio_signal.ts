@@ -8,7 +8,7 @@ export async function main() {
 
   audioOutput.subscribe([{ source: input, sourceSelector: selectAudio }]);
 
-  audioOutput.url().then(playlistUrl => {
+  void audioOutput.url().then(playlistUrl => {
     console.log(`playlistUrl: ${playlistUrl}`);
   });
 }

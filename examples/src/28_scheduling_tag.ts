@@ -4,7 +4,7 @@ import { runWebServer } from './common/webServer';
 
 export async function main() {
   const port = 3210;
-  runWebServer(port, { logPlaylists: false });
+  await runWebServer(port, { logPlaylists: false });
 
   const norsk = await Norsk.connect();
 
@@ -34,8 +34,8 @@ export async function main() {
   ]);
 
   console.log(`Master playlist: ${masterOutput.url}`);
-  audioOutput.url().then(logMediaPlaylist("audio"));
-  videoOutput.url().then(logMediaPlaylist("video"));
+  void audioOutput.url().then(logMediaPlaylist("audio"));
+  void videoOutput.url().then(logMediaPlaylist("video"));
 
   const scheduledDate = new Date();
   scheduledDate.setSeconds(scheduledDate.getSeconds() + 10)

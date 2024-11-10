@@ -73,7 +73,7 @@ export async function main() {
     slateAudio
   );
 
-  startSrtSource(norsk, speakerOrSlate);
+  await startSrtSource(norsk, speakerOrSlate);
 
   // Setup the browser input, where we get the 'slides' from
   const browserBackgroundSettings: BrowserInputSettings = {
@@ -306,7 +306,7 @@ class RtmpOutputWithRetry {
 
   retry() {
     setTimeout(() => {
-      this.run();
+      void this.run();
     }, 2000);
   }
 }
@@ -341,7 +341,7 @@ async function startSrtSource(norsk: Norsk, switcher: SourceOrSlate) {
   const srtSettings = await getSrtInputSettings();
 
   if (!srtSettings) {
-    setTimeout(() => startSrtSource(norsk, switcher), 1000);
+    setTimeout(() => void startSrtSource(norsk, switcher), 1000);
   } else {
     const speaker = await norsk.input.srt(srtSettings);
 

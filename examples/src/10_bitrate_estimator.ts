@@ -43,7 +43,7 @@ export async function main() {
       // 10s for stream bitrate estimation
       sampleIntervalsSeconds: [1, 5, 10],
     },
-    onStreamStatistics: async stats => {
+    onStreamStatistics: stats => {
       const { audio, video } = stats;
       if (stats.sampleSizeSeconds === 10) {
         if (streamStarted) return;

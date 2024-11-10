@@ -21,13 +21,13 @@ export async function main() {
   matrixMixer.subscribe([{ source: input, sourceSelector: selectAudio }]);
   audioOutput.subscribe([{ source: matrixMixer, sourceSelector: selectAudio }]);
 
-  audioOutput.url().then((playlistUrl) => {
+  void audioOutput.url().then((playlistUrl) => {
     console.log(`playlistUrl: ${playlistUrl}`);
   });
 
   // Update gains every 3s
   let wasPreviousA = true;
-  setInterval(function () {
+  setInterval(function() {
     let newMixerConfig: AudioMixMatrixSettingsUpdate;
     if (wasPreviousA) {
       newMixerConfig = { channelGains: mixB };

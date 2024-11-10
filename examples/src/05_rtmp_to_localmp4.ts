@@ -15,14 +15,14 @@ export async function main() {
     id: "localMp4Output",
     fragmentedFileName: "/mnt/output/norskOutput.fmp4",
     nonfragmentedFileName: "/mnt/output/norskOutput.mp4",
-    onClose: () => {
+    onClose: async () => {
       console.log("Closing Norsk");
-      norsk.close();
+      await norsk.close();
     },
   });
 
   output.subscribe([{ source: input, sourceSelector: selectAV }], requireAV);
-  console.log(`Recording to mp4 for ${durationMs/1000} seconds`);
+  console.log(`Recording to mp4 for ${durationMs / 1000} seconds`);
 
   // We can write non-fragmented snapshots periodically
   let i = 0;
@@ -34,5 +34,5 @@ export async function main() {
 
   // And close it to write out the non-fragmented file name set in config
   // (will close norsk via onClose callback above)
-  setTimeout(() => { console.log("Timer expired, closing output"); output.close(); }, durationMs);
+  setTimeout(() => { console.log("Timer expired, closing output"); void output.close(); }, durationMs);
 }

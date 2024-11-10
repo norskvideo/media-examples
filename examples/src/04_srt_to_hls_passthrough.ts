@@ -36,8 +36,8 @@ export async function main() {
   videoOutput.subscribe([{ source: input, sourceSelector: selectVideo }]);
 
   console.log(`Multi variant playlist: ${mvOutput.url}`);
-  audioOutput.url().then(logMediaPlaylist("audio"));
-  videoOutput.url().then(logMediaPlaylist("video"));
+  void audioOutput.url().then(logMediaPlaylist("audio"));
+  void videoOutput.url().then(logMediaPlaylist("video"));
 }
 
 const destinations: CmafDestinationSettings[] =
