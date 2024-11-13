@@ -11,7 +11,7 @@ import {
 import { webRtcServerConfig } from "./common/webRtcServerConfig";
 import { Request, Response } from "express";
 
-import express = require("express");
+import express from "express";
 
 export async function main() {
   const ladderRungs: VideoEncodeRung[] = [

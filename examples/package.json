@@ -4,8 +4,8 @@
   "dependencies": {
     "@aws-sdk/client-mediaconnect": "^3.388.0",
     "@aws-sdk/client-medialive": "^3.410.0",
-    "@norskvideo/norsk-api": "1.0.392",
-    "@norskvideo/norsk-sdk": "1.0.392",
+    "@norskvideo/norsk-api": "1.0.395",
+    "@norskvideo/norsk-sdk": "1.0.395",
     "axios": "^1.6.2",
     "cors": "^2.8.5",
     "ejs": "^3.1.9",
@@ -33,18 +33,20 @@
   },
   "prettier": {},
   "devDependencies": {
+    "@eslint/compat": "^1.2.2",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@types/express": "^4.17.14",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/yargs": "16.0.5",
-    "@typescript-eslint/eslint-plugin": "^6.2.0",
-    "@typescript-eslint/parser": "^6.2.0",
-    "eslint": "^8.46.0",
-    "eslint-plugin-unused-imports": "^3.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.13.0",
+    "@typescript-eslint/parser": "^8.13.0",
+    "eslint": "^9.14.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "mocha": "^10.7.3",
     "mocha-json-output-reporter": "^2.1.0",
     "typescript": "^4.9.5",
+    "typescript-eslint": "^8.13.0",
     "why-is-node-running": "2.2.2"
   },
-  "version": "1.0.392"
+  "version": "1.0.395"
 }

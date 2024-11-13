@@ -19,7 +19,7 @@ import {
   VideoComposeDefaults,
 } from "@norskvideo/norsk-sdk";
 import { Request, Response } from "express";
-import express = require("express");
+import express from "express";
 
 import { webRtcServerConfig } from "./common/webRtcServerConfig";
 
