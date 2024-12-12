@@ -13,7 +13,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:1.0.397-nightly-51fdab6e
+    image: norskvideo/norsk:v1.0.397-main
     network_mode: host
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
