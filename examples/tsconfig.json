@@ -3,7 +3,7 @@
         "./gen",
         "./lib",
         "./norsk-examples-remote",
-        "./public-repo-pre-publish",
+        "./_*",
         "./data",
         "./todo"
     ],

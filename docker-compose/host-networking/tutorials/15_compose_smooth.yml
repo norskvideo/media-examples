@@ -1,0 +1,77 @@
+# Norsk Media example: tutorials/15_compose_smooth
+#
+# Another picture in picture example, with smooth transitions between compositions
+#
+
+version: "3"
+
+services:
+  norsk:
+    container_name: norsk-server
+    image: norskvideo/norsk:1.0.399-nightly-cff100c2
+    network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+    volumes:
+      - ${LICENSE_FILE}:/mnt/license.json:ro
+      - ./data:/mnt/data
+      - ${OUTPUT_ROOT}:/mnt/output
+      - ${LOG_ROOT}:/var/log/norsk
+    command: --license-file /mnt/license.json 
+    shm_size: '2gb'
+    # cpuset: "0-15"
+  example:
+    container_name: norsk-example-app
+    build:
+      context: examples
+      dockerfile: Dockerfile
+      network: host # note this is for build only, not at runtime. Without it npm install can fail on some systems
+    network_mode: host
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+    environment:
+      - PUBLIC_URL_PREFIX=${PUBLIC_URL_PREFIX}
+      - DEBUG_URL_PREFIX=${DEBUG_URL_PREFIX}
+      - CLIENT_HOST_EXTERNAL=${CLIENT_HOST}
+      - CLIENT_HOST_INTERNAL=127.0.0.1
+      - TURN_MODE=${TURN_MODE}
+      - EZDRM_TOKEN
+      - EZDRM_USERNAME
+      - EZDRM_PASSWORD
+      - EZDRM_WV_PX
+      - EZDRM_PR_PX
+      
+    depends_on:
+      norsk:
+        condition: service_healthy
+    command: node -e 'require("./lib/src/tutorials/15_compose_smooth").main()'
+  # [Start of source]
+  source_0:
+    container_name: norsk-source_0
+    image: datarhei/ffmpeg
+    network_mode: host
+    entrypoint: ["/bin/sh","-c"]
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+    volumes:
+      - ./data:/tmp/data:ro
+    command:
+    - |
+        sleep 1
+        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://127.0.0.1:5001?pkt_size=1316'
+    depends_on:
+      - example
+  # [End of source]
+  # [Start of source]
+  source_1:
+    container_name: norsk-source_1
+    image: datarhei/ffmpeg
+    network_mode: host
+    entrypoint: ["/bin/sh","-c"]
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+    volumes:
+      - ./data:/tmp/data:ro
+    command:
+    - |
+        sleep 2
+        ffmpeg -v error -re -stream_loop -1 -i data/Weaving.ts  -vcodec copy -codec copy -f flv 'rtmp://127.0.0.1:1935/acme/high'
+    depends_on:
+      - example
+  # [End of source]
