@@ -17,7 +17,7 @@ export async function main() {
     nonfragmentedFileName: "/mnt/output/norskOutput.mp4",
     onClose: async () => {
       console.log("Closing Norsk");
-      await norsk.close();
+      void norsk.close();
     },
   });
 
