@@ -4,8 +4,8 @@
   "dependencies": {
     "@aws-sdk/client-mediaconnect": "^3.388.0",
     "@aws-sdk/client-medialive": "^3.410.0",
-    "@norskvideo/norsk-api": "1.0.401-2025-03-02-0a5cc1c3+nightly",
-    "@norskvideo/norsk-sdk": "1.0.401-2025-03-02-0a5cc1c3+nightly",
+    "@norskvideo/norsk-api": "1.0.401-2025-03-04-517a4454+nightly",
+    "@norskvideo/norsk-sdk": "1.0.401-2025-03-04-517a4454+nightly",
     "axios": "^1.6.2",
     "cors": "^2.8.5",
     "ejs": "^3.1.9",
@@ -48,5 +48,5 @@
     "tailwindcss": "^3.3.3",
     "why-is-node-running": "2.2.2"
   },
-  "version": "1.0.401-2025-03-02-0a5cc1c3+nightly"
+  "version": "1.0.401-2025-03-04-517a4454+nightly"
 }
