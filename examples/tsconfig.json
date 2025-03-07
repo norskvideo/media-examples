@@ -3,7 +3,6 @@
         "./gen",
         "./lib",
         "./norsk-examples-remote",
-        "./_*",
         "./data",
         "./todo"
     ],
