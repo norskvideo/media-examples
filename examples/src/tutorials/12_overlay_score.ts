@@ -26,7 +26,7 @@ export async function main() {
   const rtmpInput = await norsk.input.rtmpServer({ id: "rtmpInput" });
   browserInput = await norsk.input.browser(browserSettings);
   const compose = await norsk.processor.transform.videoCompose(composeSettings);
-  const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
+  const output = await norsk.output.whep({ id: "webrtc", name: "webrtc", ...webRtcServerConfig });
 
   compose.subscribeToPins([
     { source: rtmpInput, sourceSelector: videoToPin(background.pin) },
@@ -90,7 +90,7 @@ function runWebServer() {
   app.post("/switch", (req: Request, res: Response) => {
     if (browserInput) {
       console.log("Switching to Singular...");
-      browserInput.updateConfig({url: "https://app.singular.live/output/6CTPhPRe7yc5lkxgUixA5q/Default?aspect=9:5"})
+      browserInput.updateConfig({ url: "https://app.singular.live/output/6CTPhPRe7yc5lkxgUixA5q/Default?aspect=9:5" })
     }
     res.send("");
   });

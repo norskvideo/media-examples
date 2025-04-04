@@ -39,7 +39,7 @@ const streamSwitchSmoothSettings: StreamSwitchSmoothSettings<SourceName> = {
 };
 
 async function mkPreview(norsk: Norsk, source: SourceMediaNode, id: string) {
-  const preview = await norsk.output.whep({ id, ...webRtcServerConfig });
+  const preview = await norsk.output.whep({ id, name: id, ...webRtcServerConfig });
   preview.subscribe([{ source, sourceSelector: selectAV }]);
   console.log(`Preview: ${preview.playerUrl}`);
   return preview;
@@ -89,10 +89,12 @@ export async function main() {
 
   const pip12Preview = await norsk.output.whep({
     id: "pip12Preview",
+    name: "pip12Preview",
     ...webRtcServerConfig,
   });
   const pip21Preview = await norsk.output.whep({
     id: "pip21Preview",
+    name: "pip21Preview",
     ...webRtcServerConfig,
   });
   pip12Preview.subscribe([

@@ -126,8 +126,8 @@ export async function main() {
 
   // And two whep outputs - one for the speaker (or slate) and one for the
   // final output
-  const speakerPreview = await norsk.output.whep({ id: "speakerPreview" });
-  const slideSpeakerOutput = await norsk.output.whep({ id: "slideSpeaker" });
+  const speakerPreview = await norsk.output.whep({ id: "speakerPreview", name: "speakerPreview" });
+  const slideSpeakerOutput = await norsk.output.whep({ id: "slideSpeaker", name: "speakerPreview" });
 
   // And wire things up...
   compose.subscribeToPins([

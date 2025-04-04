@@ -159,7 +159,7 @@ class Mosaic {
             { source: override, sourceSelector: videoStreamKeys },
           ]);
 
-          const rtcOutput = await this.norsk.output.whep({ id: "webrtc" });
+          const rtcOutput = await this.norsk.output.whep({ id: "webrtc", name: "webrtc" });
           rtcOutput.subscribe([
             { source: override, sourceSelector: videoStreamKeys },
             { source: this.audioSignalInput, sourceSelector: audioStreamKeys },

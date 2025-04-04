@@ -7,7 +7,7 @@ export async function main() {
   const input = await norsk.input.rtmpServer({ id: "rtmpInput" });
   const videoPidNormalizer = await norsk.processor.transform.streamKeyOverride(videoStreamKeyConfig);
   const audioPidNormalizer = await norsk.processor.transform.streamKeyOverride(audioStreamKeyConfig);
-  const output1 = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
+  const output1 = await norsk.output.whep({ id: "webrtc", name: "webrtc", ...webRtcServerConfig });
   const output2 = await norsk.output.fileTs(tsFileOutputSettings);
 
   videoPidNormalizer.subscribe([{ source: input, sourceSelector: selectVideo }]);

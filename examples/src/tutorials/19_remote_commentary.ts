@@ -86,7 +86,7 @@ export async function main() {
     { source: input, sourceSelector: audioToPin('source') },
     { source: previewRtc, sourceSelector: audioToPin('comms') }
   ]);
-  const whep2 = await norsk.output.whep({ id: "duplexOut", ...webRtcServerConfig });
+  const whep2 = await norsk.output.whep({ id: "duplexOut", name: "duplexOut", ...webRtcServerConfig });
 
   whep2.subscribe([{ source: previewRtc, sourceSelector: selectVideo }]);
   console.log(`Commentary Whep client: ${whep2.playerUrl}`);

@@ -9,7 +9,7 @@ export async function main() {
   const norsk = await Norsk.connect();
 
   const input = await norsk.input.fileMp4({ id: "fileMp4", sourceName: "example.mp4", fileName, loop: true });
-  const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
+  const output = await norsk.output.whep({ id: "webrtc", name: "webrtc", ...webRtcServerConfig });
 
   output.subscribe([{ source: input, sourceSelector: selectAV }]);
 

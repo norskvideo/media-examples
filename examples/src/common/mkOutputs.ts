@@ -99,7 +99,7 @@ export async function mkWhepOutputs<T extends string>(
   norsk: Norsk,
   whepSettings: {
     idRoot: string,
-    webRtcServerConfig?: Omit<WhepOutputSettings, "id">
+    webRtcServerConfig?: Omit<WhepOutputSettings, "id" | "name">
   },
   sources: {
     videoLadder: VideoEncodeNode,
@@ -110,7 +110,7 @@ export async function mkWhepOutputs<T extends string>(
   const webRtcServerConfig = whepSettings.webRtcServerConfig ?? {};
 
   const mkWhepOutput = async (name: T) => {
-    const output = await norsk.output.whep({ id: whepSettings.idRoot + "-" + name, ...webRtcServerConfig });
+    const output = await norsk.output.whep({ id: whepSettings.idRoot + "-" + name, name: whepSettings.idRoot + "-" + name, ...webRtcServerConfig });
     output.subscribe([
       { source: sources.videoLadder, sourceSelector: videoRendition(name) },
       { source: sources.audio, sourceSelector: selectAudio },

@@ -70,6 +70,7 @@ export async function main() {
 
   const output = await norsk.output.whep({
     id: "webrtc",
+    name: "webrtc",
     ...webRtcServerConfig,
   });
 
