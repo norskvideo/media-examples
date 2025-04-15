@@ -165,6 +165,7 @@ export async function main() {
         // Create a single WebRTC output for this new stream
         const webRtcOutput = await norsk.output.whep({
           id: "webrtc-" + app + "-" + publishingName,
+          name: "webrtc-" + app + "-" + publishingName,
           ...webRtcServerConfig
         });
         webRtcOutput.subscribe([subscribeAV(input, app, publishingName)]);

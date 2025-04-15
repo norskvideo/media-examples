@@ -71,7 +71,7 @@ export async function main() {
 
   const compose = await norsk.processor.transform.videoCompose(composeSettings);
 
-  const output = await norsk.output.whep({ id: "webrtc", ...webRtcServerConfig });
+  const output = await norsk.output.whep({ id: "webrtc", name: "webrtc", ...webRtcServerConfig });
 
   compose.subscribeToPins([
     { source: input1, sourceSelector: videoToPin("background") },

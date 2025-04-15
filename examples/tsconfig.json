@@ -3,9 +3,9 @@
         "./gen",
         "./lib",
         "./norsk-examples-remote",
-        "./_*",
         "./data",
-        "./todo"
+        "./todo",
+        "./_public-repo-pre-publish"
     ],
     "compilerOptions": {
         "lib": [

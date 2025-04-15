@@ -1,6 +1,6 @@
 import { WhepOutputSettings } from "@norskvideo/norsk-sdk";
 
-export const webRtcServerConfig: WhepOutputSettings =
+export const webRtcServerConfig: Partial<WhepOutputSettings> =
 	(process.env.TURN_INTERNAL && process.env.TURN_EXTERNAL) ?
 		// Separate hostnames for server and client access to the turn server as in some cases they cannot resolve the same IP
 		{
