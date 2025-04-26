@@ -62,7 +62,8 @@ export async function main() {
   // And outputting media from the connected browser
   const previewRtc = await norsk.duplex.webRtcBrowser({
     id: "previewRtc",
-    ...webRtcServerConfig()
+    name: "previewRtc",
+    ...webRtcServerConfig(),
   });
   previewRtc.subscribe([
     { source: previewEncode, sourceSelector: selectVideo },
@@ -184,7 +185,7 @@ export async function main() {
 
   console.log(`HLS Multi Variant Playlist: ${multiVariantOutput.url}`);
 }
-function webRtcServerConfig(): WebRTCBrowserSettings {
+function webRtcServerConfig(): Partial<WebRTCBrowserSettings> {
   return (process.env.TURN_INTERNAL && process.env.TURN_EXTERNAL) ?
     // Separate hostnames for server and client access to the turn server as in some cases they cannot resolve the same IP
     {
