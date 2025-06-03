@@ -15,7 +15,7 @@ export async function runWebServer(port: number, opts?: Options) {
 
   app.post("*.*",
     (req: Request, res: Response) => {
-      console.log(`{RECEIVED FILE ${req.url} size: ${req.body.length}`);
+      console.log(`RECEIVED FILE ${req.url} size: ${req.body.length}`);
       if (req.body.length) {
         database[req.url] = req.body as Buffer;
       }
