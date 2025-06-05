@@ -8,7 +8,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:1.0.402-nightly-2bd87cbc
+    image: norskvideo/norsk:1.0.402-nightly-c743fb48
     network_mode: host
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
@@ -55,7 +55,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts  -vcodec copy -codec copy -f flv 'rtmp://127.0.0.1:1935/acme/high'
+        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts  -vcodec copy -acodec copy -f flv 'rtmp://127.0.0.1:1935/acme/high'
     depends_on:
       - example
   # [End of source]

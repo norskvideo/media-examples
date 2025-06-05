@@ -8,7 +8,7 @@ version: "3"
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:1.0.402-nightly-2bd87cbc
+    image: norskvideo/norsk:1.0.402-nightly-c743fb48
     network_mode: host
     user: "${DOCKER_UID}:${DOCKER_GID}"
     volumes:
@@ -55,7 +55,7 @@ services:
     command:
     - |
         sleep 1
-        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts  -vcodec copy -codec copy -f mpegts -flush_packets 0 'srt://127.0.0.1:5001?pkt_size=1316'
+        ffmpeg -v error -re -stream_loop -1 -i data/InkDrop.ts  -vcodec copy -acodec copy -f mpegts -flush_packets 0 'srt://127.0.0.1:5001?pkt_size=1316'
     depends_on:
       - example
   # [End of source]
