@@ -15,7 +15,7 @@ networks:
 services:
   norsk:
     container_name: norsk-server
-    image: norskvideo/norsk:1.0.402-nightly-384e1be5
+    image: norskvideo/norsk:1.0.402-nightly-0dab5584
     ports:
       - 1935:1935/tcp # For RTMP sources
       - 5001:5001/udp # For SRT sources
